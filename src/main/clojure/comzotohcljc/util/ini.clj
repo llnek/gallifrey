@@ -23,8 +23,8 @@
 (import '(java.net URL))
 (import '(java.io File IOException InputStreamReader
   LineNumberReader PrintStream))
-(import '(com.zotoh.frwk.util NCMap))
-(import '(java.util Map LinkedHashMap))
+(import '(com.zotoh.frwk.util NCOrderedMap))
+(import '(java.util Map))
 
 (use '[ comzotohcljc.util.files :only [file-read?] ])
 (use '[ comzotohcljc.util.core :only [conv-bool conv-long conv-double] ])
@@ -58,7 +58,7 @@
 (defn- maybeSection [^LineNumberReader rdr ^Map ncmap ^String line]
   (let [ s (StringUtils/trim (StringUtils/strip line "[]")) ]
     (when (StringUtils/isEmpty s) (throwBadIni rdr))
-    (if-not (.containsKey ncmap s) (.put ncmap s (NCMap.)))
+    (if-not (.containsKey ncmap s) (.put ncmap s (NCOrderedMap.)))
     s))
 
 (defn- maybeLine [^LineNumberReader rdr ^Map ncmap ^Map section ^String line]
@@ -175,7 +175,7 @@
   ^comzotohcljc.util.ini.IWin32Conf [^URL fUrl]
   (with-open [ inp (.openStream fUrl) ]
     (let [ rdr (LineNumberReader. (InputStreamReader. inp "utf-8"))
-           total (NCMap.) ]
+           total (NCOrderedMap.) ]
     (loop [ curSec "" line (.readLine rdr)  ]
       (if (nil? line)
         (make-winini total)
