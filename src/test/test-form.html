@@ -1,0 +1,62 @@
+
+<html>
+<head>
+<title>Netty Test Form</title>
+<base href="http://192.168.206.1:8080/"/>
+</head>
+
+<body bgcolor=white><style>td{font-size: 12pt;}</style>
+<table border="0">
+<tr>
+<td>
+<h1>Netty Test Form</h1>
+Choose one FORMfile:///tmp/poo.txt
+
+</td>
+</tr>
+</table>
+
+<CENTER>GET FORM<HR WIDTH="75%" NOSHADE color="blue"></CENTER>
+<FORM ACTION="/formget" METHOD="GET">
+<input type=hidden name=getform value="GET">
+<table border="0">
+<tr><td>Fill with value: <br> <input type=text name="info" size=10></td></tr>
+<tr><td>Fill with value: <br> <input type=text name="secondinfo" size=20>
+<tr><td>Fill with value: <br> <textarea name="thirdinfo" cols=40 rows=10></textarea>
+</td></tr>
+<tr><td><INPUT TYPE="submit" NAME="Send" VALUE="Send"></INPUT></td>
+<td><INPUT TYPE="reset" NAME="Clear" VALUE="Clear" ></INPUT></td></tr>
+</table></FORM>
+
+<CENTER><HR WIDTH="75%" NOSHADE color="blue"></CENTER>
+<CENTER>POST FORM<HR WIDTH="75%" NOSHADE color="blue"></CENTER>
+<FORM ACTION="/formpost" METHOD="POST">
+<input type=hidden name=getform value="POST">
+<table border="0">
+<tr><td>Fill with value: <br> <input type=text name="info" size=10></td></tr>
+<tr><td>Fill with value: <br> <input type=text name="secondinfo" size=20>
+<tr><td>Fill with value: <br> <textarea name="thirdinfo" cols=40 rows=10></textarea>
+<tr><td>Fill with file (only file name will be transmitted): <br> <input type=file name="myfile">
+</td></tr>
+<tr><td><INPUT TYPE="submit" NAME="Send" VALUE="Send"></INPUT></td>
+<td><INPUT TYPE="reset" NAME="Clear" VALUE="Clear" ></INPUT></td></tr>
+</table></FORM>
+
+<CENTER><HR WIDTH="75%" NOSHADE color="blue"></CENTER>
+<CENTER>POST MULTIPART FORM<HR WIDTH="75%" NOSHADE color="blue"></CENTER>
+<FORM ACTION="/formpostmultipart" ENCTYPE="multipart/form-data" METHOD="POST">
+<input type=hidden name=getform value="POST">
+<table border="0">
+<tr><td>Fill with value: <br> <input type=text name="info" size=10></td></tr>
+<tr><td>Fill with value: <br> <input type=text name="secondinfo" size=20>
+<tr><td>Fill with value: <br> <textarea name="thirdinfo" cols=40 rows=10></textarea>
+<tr><td>Fill with file: <br> <input type=file name="myfile">
+</td></tr>
+<tr><td><INPUT TYPE="submit" NAME="Send" VALUE="Send"></INPUT></td>
+<td><INPUT TYPE="reset" NAME="Clear" VALUE="Clear" ></INPUT></td></tr>
+</table></FORM>
+
+<CENTER><HR WIDTH="75%" NOSHADE color="blue"></CENTER>
+</body>
+</html>
+

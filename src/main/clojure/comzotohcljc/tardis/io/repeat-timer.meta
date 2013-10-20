@@ -1,0 +1,10 @@
+[info]
+block-type=czc.tardis.io/RepeatingTimer
+version=0.0.1
+name=RepeatTimer
+
+[conf]
+# 5mins
+interval-secs=300
+delay-secs=0
+handler=

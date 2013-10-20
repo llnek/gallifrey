@@ -1,0 +1,83 @@
+(ns comzotohcljc.wflow.play)
+
+(import '(com.zotoh.gallifrey.core Job))
+
+(require '[comzotohcljc.util.core :as CU])
+(use '[comzotohcljc.util.core :only (MutableObjectAPI) ])
+
+(use '[comzotohcljc.util.scheduler])
+(use '[comzotohcljc.wflow.core])
+(use '[comzotohcljc.wflow.user])
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(deftype PPP [] PipelineDelegateAPI
+
+  (getStart [_]
+    (fn [pipe]
+      (make-ptask (fn [fw job arg] (println " WTF , you called me ???????? ")))
+      ))
+
+  (getStop [_]
+    (fn [pipe] (println "DUDE, please stop!")))
+
+  (getError [_] ))
+
+
+(def SCH (make-scheduler nil))
+(.activate SCH {} )
+
+(defprotocol CCC
+  (core [_] ))
+
+(defn makeccc []
+  (reify
+    CCC
+    (core [_] SCH )))
+
+(def CTR (makeccc))
+
+(defn makejob []
+  (let [ impl (CU/make-mmap) ]
+    (reify
+      MutableObjectAPI
+            (seq* [_] (CU/test-cond "not implemented" false))
+            (setf! [_ k v] (.mm-s impl k v))
+            (getf [_ k] (.mm-g impl k))
+            (clear! [_] (.mm-c impl))
+            (clrf! [_ k] (.mm-r impl k))
+
+      Job
+      (parent [_] CTR)
+      (id [_] 333)
+      (event[_] nil))) )
+
+
+
+
+
+
+(def JOB (makejob))
+(def PIPE (make-pipeline JOB "comzotohcljc.wflow.play.PPP"))
+
+(.start PIPE)
+
+
+(comment
+(def pt (make-ptask (fn [ fw job arg]  (println "WTF Dude!" )) ) )
+(def fw (ac-reify pt (ac-reify-nihil PIPE)))
+(fw-evaluate! fw JOB)
+)
+
+
+;;(.stop SCH {} )
+
+
+
+
+
+
+
+(def ^:private play-eof nil)
+

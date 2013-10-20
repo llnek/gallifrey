@@ -1,0 +1,988 @@
+/*??
+*
+* Copyright (c) 2013 Cherimoia, LLC. All rights reserved.
+*
+* This library is distributed in the hope that it will be useful
+* but without any warranty; without even the implied warranty of
+* merchantability or fitness for a particular purpose.
+*
+* The use and distribution terms for this software are covered by the
+* Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
+* which can be found in the file epl-v10.html at the root of this distribution.
+*
+* By using this software in any fashion, you are agreeing to be bound by
+* the terms of this license.
+* You must not remove this notice, or any other, from this software.
+*
+ ??*/
+
+import java.util.UUID
+
+//////////////////////////////////////////////////////////////////////////////
+// external tools
+//////////////////////////////////////////////////////////////////////////////
+
+includeTool << gant.tools.Ivy
+
+//////////////////////////////////////////////////////////////////////////////
+// global properties
+//////////////////////////////////////////////////////////////////////////////
+
+property( name: 'gantProjectName' , value: 'gallifrey')
+property( name: 'PID_DISTRO', value: "${gantProjectName}-distro")
+property( name: "PID", value: "${gantProjectName}")
+property ( file: "build.xs" )
+property( name: 'ivySettingsDir', value: "${basedir}")
+
+//////////////////////////////////////////////////////////////////////////////
+// language compilers
+//////////////////////////////////////////////////////////////////////////////
+
+path (id : 'scalaPathId') {
+  fileset ( dir: "${scalaLibDir}" )
+}
+
+path (id: 'clojurePathId') {
+  fileset ( dir: "${clojureDir}")
+}
+
+taskdef ( name: 'scalac',
+          classname: 'scala.tools.ant.Scalac',
+          classpathref: 'scalaPathId')
+
+def generateUUID() { UUID.randomUUID() }
+
+  /* =================================
+        target: ivy stuff
+       ================================= */
+
+ivy.settings( file: "${ivySettingsDir}/ivy.config.xml" )
+
+target (resolve: '') {
+  // conf="*" will copie artifacts defined for each conf in a dir matching conf name
+  ivy.retrieve( pattern: "${ivyLibDir}/[conf]/[artifact]-[revision].[ext]" )
+}
+
+  /* =================================
+        target: build
+       ================================= */
+
+target (buildr : '') {
+  depends (clean,checkTpcl,resolve,preBuild)
+  println "#############################################"
+  println "#                                           #"
+  println "Building project ${gantProjectName}..."
+  println "#                                           #"
+  println "#############################################"
+  compileAndJar()
+}
+
+  /* =================================
+        target: test-build
+       ================================= */
+
+target ( testBuild : '') { 
+  depends(compileTestCode, runTestCode)
+  println "Test called - OK."
+}
+
+target (fullTestBuild : '') {
+  depends (buildr, testBuild)
+}
+
+  /* =================================
+      target: publish
+     ================================= */
+
+target (pubDistro : '') {
+  depends (justJar, distroPackage, clean4Distro)
+  ivy.publish (resolver: 'local-repo',
+               overwrite: true,
+               status: 'release',
+               pubrevision: "${buildVersion}") {
+    artifacts ( pattern: "${distribDir}/[artifact]-${buildVersion}.[ext]")
+  }
+  println "Project ${PID} released with version ${buildVersion} - OK."
+}
+
+target (pubJar: '') {
+  depends (testBuild)
+}
+
+target (justJar: '') {
+  depends(buildr)
+}
+
+  /* =================================
+      target: clean
+     ================================= */
+
+target (clean: '') {
+  delete (dir: "${buildDir}")
+  delete (dir: "${qaDir}")
+  delete (dir: "${distribDir}" )
+  delete (dir: "${packDir}" )
+  delete (dir: "${libDir}" )
+  mkdir (dir: "${gantBuildDir}")
+}
+
+  /* =================================
+        target: clean-cache
+       ================================= */
+
+target (cleanCache : '') {
+  ivy.cleancache()
+}
+
+  /* =================================
+      target: clean-local
+     ================================= */
+
+target (cleanLocal: '') {
+  println "${ivyLRepoDir}"
+}
+
+  /* =================================
+        target: report
+       ================================= */
+
+target (report: '') {
+  depends (resolve)
+  ivy.report (todir: "${buildDir}")
+}
+
+  /* =================================
+      target: distro-package
+     ================================= */
+
+target (distroPackage: '') {
+  depends (distroInit, packAndDistro)
+}
+
+target (distroInit: '') {
+  delete (dir: "${packDir}")
+  mkdir (dir: "${packDir}")
+  mkdir (dir: "${packDir}/conf")
+  //mkdir (dir: "${packDir}/boot")
+  mkdir (dir: "${packDir}/dist/boot")
+  mkdir (dir: "${packDir}/dist/exec")
+  mkdir (dir: "${packDir}/bin")
+  mkdir (dir: "${packDir}/etc/blocks")
+  //mkdir (dir: "${packDir}/etc")
+  //mkdir (dir: "${packDir}/patch")
+  mkdir (dir: "${packDir}/lib")
+  mkdir (dir: "${packDir}/logs")
+  mkdir (dir: "${packDir}/docs/samples")
+  mkdir (dir: "${packDir}/docs/src")
+  //mkdir (dir: "${packDir}/lics")
+  mkdir (dir: "${packDir}/tmp")
+  mkdir (dir: "${packDir}/apps")
+  //mkdir (dir: "${packDir}/pods")
+  mkdir (dir: "${packDir}/.ivyroot")
+  touch (file: "${packDir}/VERSION")
+  echo (message: "${buildVersion}" , file: "${packDir}/VERSION")
+  copy (todir: "${packDir}/etc") {
+    fileset (dir: "${basedir}/etc")
+  }
+  copy (todir: "${packDir}/conf") {
+    fileset (dir: "${basedir}/etc/conf")
+  }
+}
+
+target (packAndDistro : '') {
+  depends (packRes,
+           packDocs,
+           packSrc,
+           packLics,
+           packBin,
+           packDist,
+           packLibs,
+           packSamples,
+           packAll)
+}
+
+  /* =================================
+        target: pack-resource
+       ================================= */
+
+target (packRes: '') {
+  copy (todir: "${packDir}/etc/blocks", flatten: true) {
+    fileset (dir: "${srcDir}/clojure") {
+      include (name: '**/*.meta')
+    }
+  }
+  copy (todir: "${packDir}/etc") {
+    fileset (dir: "${basedir}/etc")
+  }
+}
+
+  /* =================================
+        target: pack-docs
+       ================================= */
+
+target (packDocs: '') {
+  mkdir (dir: "${packDir}/docs/api")
+  copy (todir: "${packDir}/docs") {
+    fileset (dir: "${basedir}/docs", erroronmissingdir: false) {
+      exclude (name: 'dummy.txt')
+      exclude (name: '.svn')
+    }
+  }
+  java (classname: 'autodoc.autodoc',
+    fork: true, 
+    failonerror: true) {
+    classpath (refid: 'compilePathId')
+    arg (value: '--name=Hohenheim')
+    arg (value: "--root=${basedir}")
+    arg (value: '--source-path=src/main/clojure')
+    arg (value: "--output-path=${packDir}/docs/api")
+  }
+}
+
+  /* =================================
+        target: pack-src
+       ================================= */
+
+target (packSrc: '') {
+  copy (todir: "${packDir}/docs/src/main/clojure") {
+    fileset (dir: "${srcDir}/clojure")
+  }
+  copy (todir: "${packDir}/docs/src/main/scala") {
+    fileset (dir: "${srcDir}/scala")
+  }
+  copy (todir: "${packDir}/docs/src/main/java") {
+    fileset (dir: "${srcDir}/java")
+  }
+}
+
+  /* =================================
+        target: pack-lics
+       ================================= */
+
+target (packLics: '') {
+  copy (todir: "${packDir}/lics") {
+    fileset (dir: "${basedir}/lics", erroronmissingdir: false)
+  }
+  copy (todir: "${packDir}", flatten: true) {
+    fileset (dir: "${basedir}") {
+      include (name: '*.html')
+      include (name: '*.txt')
+      include (name: '*.md')
+    }
+  }
+
+}
+
+  /* =================================
+        target: pack-dist
+       ================================= */
+
+target (packDist: '') {
+  copy (todir: "${packDir}/dist/exec") {
+    fileset (dir: "${distribDir}/exec") {
+      include (name: '*.jar')
+    }
+  }
+  copy (todir: "${packDir}/dist/boot") {
+    fileset (dir: "${distribDir}/boot") {
+      include (name: '*.jar')
+    }
+  }
+}
+
+  /* =================================
+        target: pack-libs
+       =================================  */
+
+target (packLibs: '') {
+  copy (todir: "${packDir}/lib") {
+    fileset (dir: "${libDir}/libjar")
+  }
+}
+
+  /* =================================
+        target: pack-bin
+       ================================= */
+
+target (packBin: '') {
+  copy (todir: "${packDir}/bin") {
+    fileset (dir: "${basedir}/bin", erroronmissingdir: false) {
+      exclude (name: '.svn')
+    }
+  }
+  chmod (dir: "${packDir}/bin", perm: '755', includes: '*')
+}
+
+  /* =================================
+        target: pack-samples
+       ================================= */
+
+target (packSamples: '') {
+  new File( "${srcDir}/scala/com/zotoh/gallifrey/demo").eachDir { dir ->
+    createOneDemoApp(dir)
+  }
+}
+
+  /* =================================
+        target: pack-all
+       ================================= */
+
+target (packAll: '') {
+  delete (dir: "${packDir}/tmp")
+  mkdir (dir: "${packDir}/tmp")
+  tar (destfile: "${distribDir}/${PID_DISTRO}-${buildVersion}.tar.gz", compression: 'gzip') {
+    tarfileset (dir: "${packDir}") {
+      exclude (name: 'bin/**')
+    }
+    tarfileset (dir: "${packDir}", filemode: '755') {
+      include (name: 'bin/**')
+    }
+  }
+  /*
+  gzip (destfile: "${distribDir}/${PID_DISTRO}-${buildVersion}.tar.gz", src: "${distribDir}/${PID_DISTRO}.tar")
+  zip (destfile: "${distribDir}/${PID_DISTRO}.zip") {
+    fileset (dir: "${packDir}")
+  }
+  */
+}
+
+target (checkTpcl: '') {
+}
+
+target (preBuild: '') {
+  mkdir (dir: "${distribDir}/boot")
+  mkdir (dir: "${distribDir}/exec")
+  mkdir (dir: "${libDir}")
+  mkdir (dir: "${libDir}/libjar")
+  mkdir (dir: "${qaDir}")
+  mkdir (dir: "${buildDir}")
+  // get rid of debug logging during build!
+  copy (todir: "${buildDir}", file: "${basedir}/logback.xml")
+}
+
+  /*
+       paths used for compilation and run
+       */
+
+path (id: 'compilePathId') {
+  fileset (dir: "${libDir}/libjar")
+  fileset (dir: "${distribDir}") {
+    include (name: 'boot/*.jar')
+    include (name: 'exec/*.jar')
+  }
+  fileset (dir: "${scalaLibDir}")
+  fileset (dir: "${clojureDir}")
+  path (location: "${buildDir}")
+  path (location: "${srcDir}/clojure")
+}
+
+path (id: 'testPathId') {
+  fileset (dir: "${libDir}/test") {
+    include (name: '*.jar')
+  }
+  fileset (dir: "${scalaLibDir}") {
+    include (name: '*.jar')
+  }
+  fileset (dir: "${clojureDir}") {
+    include (name: '*.jar')
+  }
+  fileset (dir: "${distribDir}") {
+    include (name: 'boot/*.jar')
+    include (name: 'exec/*.jar')
+  }
+  path (location: "${buildDir}")
+  path (location: "${buildTestDir}")
+  path (location: "${testDir}/clojure")
+}
+
+  /*
+       compile source code
+       */
+
+target (cljhhhMain: '') { cljhhh_Main() }
+
+target (cljhhhCore: '') { cljhhh_Core() }
+
+target (cljhhhIO: '') { cljhhh_IO() }
+
+target (cljhhhAuth: '') { cljhhh_Auth() }
+
+target (cljhhhMVC: '') { cljhhh_MVC() }
+
+target (cljDBIO: '') { clj_DBIO() }
+
+target (cljNet:'') { clj_Net() }
+
+target (cljJMX: '') { clj_JMX() }
+
+target (cljCrypto: '') { clj_Crypto() }
+
+target (cljUtil: '') { clj_Util() }
+
+target (jarit: '') { jarAll() }
+
+target (compileClj: '') { compile_clj() }
+
+  /*
+       compile test code
+       */
+
+target (compileTestCode: '') {
+  mkdir (dir: "${reportTestDir}")
+  mkdir (dir: "${buildTestDir}")
+  compileTests_Java()
+  compileTests_Scala()
+  compileTests_Clj()
+}
+
+  /*
+       run test code
+       */
+
+target (runtestsJava: '') { runtests_Java() }
+
+target (runtestsScala: '') { runtests_Scala() }
+
+target (runtestsClj: '') { runtests_Clj() }
+
+target (runTestCode: '') {
+  //depends (compileTestCode)
+  depends(runtestsJava,runtestsScala,runtestsClj)
+  //println 'No test to run.'
+}
+
+  /*
+       pack common web assets (css + js)
+       */
+target (packWebAssets: '') {
+}
+
+
+  /*
+       pack license files
+       */
+
+target (packAllLics: '') {
+  copy (todir: "${packDir}/lics") {
+    fileset (dir: "${basedir}/lics", erroronmissingdir: false) {
+      exclude (name: '.svn')
+    }
+  }
+}
+
+  /*
+       pack samples and/or demos
+       */
+
+def createOneDemoApp(dir) {
+  final demoSrc="${srcDir}/scala/com/zotoh/gallifrey"
+  final demoDir="${packDir}/docs/samples"
+  final appkey= generateUUID()
+  final appid= dir.getName()
+  final res= "${demoDir}/${appid}/src/main/resources/"
+  final pfx= "${demoDir}/${appid}/public/"
+  if ("jetty" == "${appid}" || "mvc" == "${appid}") {
+    ["images","scripts","styles"].each { s ->
+      new File(pfx + s).mkdirs()
+    }
+    ant.copy (todir: pfx + "images", file: "${basedir}/etc/web/favicon.ico")
+    ant.copy (todir: pfx + "scripts", file: "${demoSrc}/demo/test.js")
+    ant.copy (todir: pfx + "styles", file: "${demoSrc}/demo/main.css")
+    ant.mkdir (dir: res + "coffee")
+    ant.mkdir (dir: res + "less")
+    ant.mkdir (dir: res + "js")
+  }
+  ant.copy (todir: "${demoDir}/${appid}", file: "${basedir}/etc/app/build.xml")
+  if ("jetty" == "${appid}") {
+    ant.mkdir (dir: "${demoDir}/${appid}/WEB-INF/classes")
+    ant.mkdir (dir: "${demoDir}/${appid}/WEB-INF/lib")
+    ant.copy (todir: "${demoDir}/${appid}/WEB-INF", file: "${basedir}/etc/jetty/web.xml")
+  }
+  ["classes", "patch", "lib" ].each { s ->
+    new File("${demoDir}/${appid}/POD-INF/" + s).mkdirs()
+  }
+  //copy (todir: "${demoDir}/${appid}/POD-INF/lib", file: "${distribDir}/demo.jar")
+  ant.mkdir (dir: "${demoDir}/${appid}/META-INF")
+  ant.echo (message: '', file: "${demoDir}/${appid}/META-INF/RELEASE-NOTES.txt")
+  ant.echo (message: '', file: "${demoDir}/${appid}/META-INF/NOTES.txt")
+  ant.echo (message: '', file: "${demoDir}/${appid}/META-INF/LICENSE.txt")
+  ant.echo (message: '', file: "${demoDir}/${appid}/META-INF/README.md")
+  ant.copy (todir: "${demoDir}/${appid}/META-INF", file: "${basedir}/etc/app/MANIFEST.MF")
+  ant.replace (file: "${demoDir}/${appid}/META-INF/MANIFEST.MF", token: "@@APPKEY@@", value: "${appkey}")
+  ant.replace (file: "${demoDir}/${appid}/META-INF/MANIFEST.MF", token: "@@APPMAINCLASS@@", value: "demo.${appid}.DemoMain")
+  ant.copy (todir: "${demoDir}/${appid}/conf") {
+    fileset (dir: "${demoSrc}/demo/${appid}") {
+      include (name: '*.conf')
+    }
+  }
+  copy (todir: "${demoDir}/${appid}/conf", file: "${basedir}/etc/app/app.conf")
+  replace (file: "${demoDir}/${appid}/conf/app.conf", token: "@@USER@@", value: 'test')
+  ant.copy (todir: "${demoDir}/${appid}/src/main/scala/demo/${appid}") {
+    fileset (dir: "${demoSrc}/demo/${appid}") {
+      exclude (name: '**/env.conf')
+    }
+  }
+  ant.mkdir(dir: "${demoDir}/${appid}/src/main/clojure")
+  ant.mkdir(dir: "${demoDir}/${appid}/src/main/java")
+  ant.mkdir(dir: "${demoDir}/${appid}/docs")
+  ant.copy (todir: "${demoDir}/${appid}", file: "${basedir}/etc/app/build.xs")
+  ant.replace (file: "${demoDir}/${appid}/build.xs", token: "@@GALLIFREYHOME@@", value: "${basedir}/../..")
+  ant.replace (file: "${demoDir}/${appid}/build.xml", token: "@@APPID@@", value: "${appid}")
+  ant.replace (file: "${demoDir}/${appid}/build.xml", token: "@@APPCLJFILES@@", value: '')
+  ant.copy (todir: "${demoDir}/${appid}", file: "${basedir}/etc/app/ivy.config.xml")
+  ant.copy (todir: "${demoDir}/${appid}", file: "${basedir}/etc/app/ivy.xml")
+  ant.replace (file: "${demoDir}/${appid}/ivy.xml", token: "@@APPDOMAIN@@", value: 'demoware')
+  ant.replace (file: "${demoDir}/${appid}/ivy.xml", token: "@@APPID@@", value: "${appid}")
+  ant.copy (todir: "${demoDir}/${appid}", file: "${basedir}/etc/app/pom.xml")
+  ant.replace (file: "${demoDir}/${appid}/pom.xml", token: "@@APPDOMAIN@@", value: 'demoware')
+  ant.replace (file: "${demoDir}/${appid}/pom.xml", token: "@@APPID@@", value: "${appid}")
+  ant.zip (destfile: "${demoDir}/${appid}.pod") {
+    fileset (dir: "${demoDir}/${appid}")
+  }
+  delete (dir: "${demoDir}/${appid}")
+}
+
+target (createDemoApp: '') {
+}
+
+
+
+  /*
+       public TARGETS
+       */
+
+target (release: '') {
+  depends (pubDistro)
+}
+
+target (jar: '') {
+  depends (pubJar)
+}
+
+target (gentest: '') {
+  depends (fullTestBuild)
+}
+
+target (test: '') {
+  depends (testBuild)
+}
+
+  /*
+       housekeeping stuff
+       */
+
+target (clean4Distro: '') {
+  delete (dir: "${ivyLCacheDir}/com.zotoh/${gantProjectName}", quiet: true)
+  delete (dir: "${ivyLRepoDir}/com.zotoh/${gantProjectName}", quiet: true)
+}
+
+
+setDefaultTarget (release)
+
+
+//////////////////////
+//
+
+def compile_clj() {
+
+  clj_Util()
+  clj_Crypto()
+  clj_Net()
+  clj_JMX()
+  clj_DBIO()
+  cljhhh_IO()
+  cljhhh_MVC()
+  cljhhh_Core()
+  cljhhh_Auth()
+  cljhhh_Main()
+
+  copy (todir: "${buildDir}") {
+    fileset (dir: "${srcDir}/clojure") {
+      exclude (name: '**/*.meta')
+      exclude (name: '**/*.clj')
+      exclude (name: '**/.svn')
+    }
+  }
+}
+
+def compileJava() {
+  javac (sourcepath: '',
+         srcdir: "${srcDir}/java",
+         destdir: "${buildDir}",
+         includeantruntime: false,
+         excludes: '',
+         debug: "${buildDebug}",
+         debuglevel: 'lines,vars,source',
+         classpathref: 'compilePathId') {
+    compilerarg (line: '-Xlint:deprecation -Xlint:unchecked')
+    include (name: '**/*.java')
+  }
+}
+
+def compileAndJar() {
+
+  /* build the classloaders */
+  scalac (srcdir: "${srcDir}/scala",
+    destdir: "${buildDir}",
+    classpathref: 'compilePathId',
+    fork: true,
+    jvmargs: '-Xmx5120M -Xms1024M') {
+    include (name: 'com/zotoh/gallifrey/loaders/**/*.scala')
+  }
+
+  jar (destfile: "${distribDir}/boot/${PID}-spec-${buildVersion}.jar") {
+    fileset (dir: "${buildDir}")
+  }
+
+  delete (dir: "${buildDir}")
+  mkdir (dir: "${buildDir}")
+
+  /* build java + scala stuff */
+
+  compileJava()
+
+  scalac (srcdir: "${srcDir}/scala",
+    destdir: "${buildDir}",
+    classpathref: 'compilePathId',
+    fork: true,
+    jvmargs: '-Xmx5120M -Xms1024M') {
+    exclude (name: '**/loaders/*.scala')
+    include (name: '**/*.scala')
+  }
+
+  /* copy over other resources */
+  copy (todir: "${buildDir}") {
+    fileset (dir: "${srcDir}/java") {
+      exclude (name: '**/*.java')
+      exclude (name: '**/.svn')
+    }
+    fileset (dir: "${srcDir}/scala") {
+      exclude (name: '**/*.scala')
+      exclude (name: '**/.svn')
+    }
+  }
+
+  compile_clj()
+  jarit()
+
+}
+
+def jarAll() {
+  jar (destfile: "${distribDir}/exec/${PID}-${buildVersion}.jar") {
+    fileset (dir: "${buildDir}") {
+      exclude (name: '**/log4j.properties')
+      exclude (name: '**/logback.xml')
+      exclude (name: 'demo/**')
+    }
+  }
+}
+
+
+def clj_Util() {
+  java (classname: 'clojure.lang.Compile',
+        fork: true,
+        failonerror: true,
+        maxmemory: '2048m',
+        classpathref: 'compilePathId') {
+    sysproperty (key: 'clojure.compile.warn-on-reflection', value: true)
+    sysproperty (key: 'clojure.compile.path', value: "${buildDir}")
+    arg (value: 'comzotohcljc.util.core')
+    arg (value: 'comzotohcljc.util.bytes')
+    arg (value: 'comzotohcljc.util.cmdline')
+    arg (value: 'comzotohcljc.util.constants')
+    arg (value: 'comzotohcljc.util.countrycode')
+    arg (value: 'comzotohcljc.util.dates')
+    arg (value: 'comzotohcljc.util.files')
+    arg (value: 'comzotohcljc.util.guids')
+    arg (value: 'comzotohcljc.util.io')
+    arg (value: 'comzotohcljc.util.meta')
+    arg (value: 'comzotohcljc.util.mime')
+    arg (value: 'comzotohcljc.util.process')
+    arg (value: 'comzotohcljc.util.seqnum')
+    arg (value: 'comzotohcljc.util.str')
+    arg (value: 'comzotohcljc.util.usastate')
+    arg (value: 'comzotohcljc.util.ini')
+    arg (value: 'comzotohcljc.util.scheduler')
+    arg (value: 'comzotohcljc.i18n.resources')
+  }
+}
+
+def clj_Crypto() {
+  java (classname: 'clojure.lang.Compile',
+        fork: true,
+        failonerror: true,
+        maxmemory: '2048m',
+        classpathref: 'compilePathId') {
+    sysproperty (key: 'clojure.compile.warn-on-reflection', value: true)
+    sysproperty (key: 'clojure.compile.path', value: "${buildDir}")
+    arg (value: 'comzotohcljc.crypto.codec')
+    arg (value: 'comzotohcljc.crypto.core')
+    arg (value: 'comzotohcljc.crypto.stores')
+    arg (value: 'comzotohcljc.crypto.ssl')
+  }
+}
+
+
+def clj_JMX() {
+  java (classname: 'clojure.lang.Compile',
+        fork: true,
+        failonerror: true,
+        maxmemory: '2048m',
+        classpathref: 'compilePathId') {
+    sysproperty (key: 'clojure.compile.warn-on-reflection', value: true)
+    sysproperty (key: 'clojure.compile.path', value: "${buildDir}")
+    arg (value: 'comzotohcljc.jmx.names')
+    arg (value: 'comzotohcljc.jmx.bean')
+    arg (value: 'comzotohcljc.jmx.core')
+  }
+}
+
+def clj_Net() {
+  java (classname: 'clojure.lang.Compile',
+        fork: true,
+        failonerror: true,
+        maxmemory: '2048m',
+        classpathref: 'compilePathId') {
+    sysproperty (key: 'clojure.compile.warn-on-reflection', value: true)
+    sysproperty (key: 'clojure.compile.path', value: "${buildDir}")
+    arg (value: 'comzotohcljc.net.comms')
+    arg (value: 'comzotohcljc.net.rts')
+    arg (value: 'comzotohcljc.netty.comms')
+  }
+}
+
+def clj_DBIO() {
+  java (classname: 'clojure.lang.Compile',
+        fork: true,
+        failonerror: true,
+        maxmemory: '2048m',
+        classpathref: 'compilePathId') {
+    sysproperty (key: 'clojure.compile.warn-on-reflection', value: true)
+    sysproperty (key: 'clojure.compile.path', value: "${buildDir}")
+    arg (value: 'comzotohcljc.dbio.core')
+    arg (value: 'comzotohcljc.dbio.sql')
+    arg (value: 'comzotohcljc.dbio.simple')
+    arg (value: 'comzotohcljc.dbio.composite')
+    arg (value: 'comzotohcljc.dbio.connect')
+    arg (value: 'comzotohcljc.dbio.drivers')
+    arg (value: 'comzotohcljc.dbio.sqlserver')
+    arg (value: 'comzotohcljc.dbio.h2')
+    arg (value: 'comzotohcljc.dbio.oracle')
+    arg (value: 'comzotohcljc.dbio.mysql')
+    arg (value: 'comzotohcljc.dbio.postgresql')
+  }
+}
+
+def cljhhh_MVC() {
+  java (classname: 'clojure.lang.Compile',
+        fork: true,
+        failonerror: true,
+        maxmemory: '2048m',
+        classpathref: 'compilePathId') {
+    sysproperty (key: 'clojure.compile.warn-on-reflection', value: true)
+    sysproperty (key: 'clojure.compile.path', value: "${buildDir}")
+    arg (value: 'comzotohcljc.tardis.mvc.tpls')
+    arg (value: 'comzotohcljc.tardis.mvc.handler')
+  }
+}
+
+
+def cljhhh_Auth() {
+  java (classname: 'clojure.lang.Compile',
+        fork: true,
+        failonerror: true,
+        maxmemory: '2048m',
+        classpathref: 'compilePathId') {
+    sysproperty (key: 'clojure.compile.warn-on-reflection', value: true)
+    sysproperty (key: 'clojure.compile.path', value: "${buildDir}")
+    arg (value: 'comzotohcljc.tardis.auth.dms')
+    arg (value: 'comzotohcljc.tardis.auth.core')
+    arg (value: 'comzotohcljc.tardis.auth.rm')
+    arg (value: 'comzotohcljc.tardis.auth.shiro')
+  }
+}
+
+def cljhhh_IO() {
+  java (classname: 'clojure.lang.Compile',
+        fork: true,
+        failonerror: true,
+        maxmemory: '2048m',
+        classpathref: 'compilePathId') {
+    sysproperty (key: 'clojure.compile.warn-on-reflection', value: true)
+    sysproperty (key: 'clojure.compile.path', value: "${buildDir}")
+    arg (value: 'comzotohcljc.tardis.io.context')
+    arg (value: 'comzotohcljc.tardis.io.core')
+    //arg (value: 'comzotohcljc.tardis.io.events')
+    arg (value: 'comzotohcljc.tardis.io.socket')
+    arg (value: 'comzotohcljc.tardis.io.files')
+    arg (value: 'comzotohcljc.tardis.io.http')
+    arg (value: 'comzotohcljc.tardis.io.jms')
+    arg (value: 'comzotohcljc.tardis.io.loops')
+    arg (value: 'comzotohcljc.tardis.io.mails')
+    arg (value: 'comzotohcljc.tardis.io.netty')
+    arg (value: 'comzotohcljc.tardis.io.servlet')
+    arg (value: 'comzotohcljc.tardis.io.triggers')
+  }
+}
+
+def cljhhh_Core() {
+  java (classname: 'clojure.lang.Compile',
+        fork: true,
+        failonerror: true,
+        maxmemory: '2048m',
+        classpathref: 'compilePathId') {
+    sysproperty (key: 'clojure.compile.warn-on-reflection', value: true)
+    sysproperty (key: 'clojure.compile.path', value: "${buildDir}")
+    arg (value: 'comzotohcljc.tardis.core.constants')
+    arg (value: 'comzotohcljc.tardis.core.climain')
+    arg (value: 'comzotohcljc.tardis.core.sys')
+    arg (value: 'comzotohcljc.tardis.etc.cmdline')
+    arg (value: 'comzotohcljc.tardis.etc.task')
+    arg (value: 'comzotohcljc.tardis.etc.cli')
+    arg (value: 'comzotohcljc.tardis.etc.core')
+    arg (value: 'comzotohcljc.tardis.etc.misc')
+    arg (value: 'comzotohcljc.tardis.impl.defaults')
+  }
+}
+
+def cljhhh_Main() {
+  java (classname: 'clojure.lang.Compile',
+        fork: true,
+        failonerror: true,
+        maxmemory: '2048m',
+        classpathref: 'compilePathId') {
+    sysproperty (key: 'clojure.compile.warn-on-reflection', value: true)
+    sysproperty (key: 'clojure.compile.path', value: "${buildDir}")
+    arg (value: 'comzotohcljc.tardis.impl.ext')
+    arg (value: 'comzotohcljc.tardis.impl.sys')
+    arg (value: 'comzotohcljc.tardis.impl.exec')
+  }
+}
+
+def compileTests_Java() {
+  javac (sourcepath: '',
+    srcdir: "${testDir}/java",
+    destdir: "${buildTestDir}",
+    includeantruntime: false,
+    excludes: '',
+    debug: "${buildDebug}",
+    debuglevel: 'lines,vars,source',
+    classpathref: 'testPathId') {
+    compilerarg (line: '-Xlint:deprecation -Xlint:unchecked')
+    include (name: '**/*.java')
+  }
+  copy (todir: "${buildTestDir}") {
+    fileset (dir: "${testDir}/java") {
+      exclude (name: '**/*.java')
+      exclude (name: '**/.svn')
+    }
+  }
+}
+
+def compileTests_Scala() {
+  scalac (srcdir: "${testDir}/scala",
+  destdir: "${buildTestDir}",
+  classpathref: 'testPathId',
+    fork: true,
+    jvmargs: '-Xmx5120M -Xms1024M') {
+    include (name: '**/*.scala')
+  }
+  copy (todir: "${buildTestDir}") {
+    fileset (dir: "${testDir}/scala") {
+      exclude (name: '**/*.scala')
+      exclude (name: '**/.svn')
+    }
+  }
+}
+
+def compileTests_Clj() {
+  java (classname: 'clojure.lang.Compile',
+    fork: true,
+    failonerror: true,
+    maxmemory: '2048m',
+    classpathref: 'testPathId') {
+    sysproperty (key: 'clojure.compile.warn-on-reflection', value: true)
+    sysproperty (key: 'clojure.compile.path', value: "${buildTestDir}")
+    arg (value: 'testcljc.util.byteutils')
+    arg (value: 'testcljc.util.codes')
+    arg (value: 'testcljc.util.coreutils')
+    arg (value: 'testcljc.util.dateutils')
+    arg (value: 'testcljc.util.fileutils')
+    arg (value: 'testcljc.util.guids')
+    arg (value: 'testcljc.util.ioutils')
+    arg (value: 'testcljc.util.metautils')
+    arg (value: 'testcljc.util.mimeutils')
+    arg (value: 'testcljc.util.procutils')
+    arg (value: 'testcljc.util.seqnumgen')
+    arg (value: 'testcljc.util.strutils')
+    arg (value: 'testcljc.util.win32ini')
+    arg (value: 'testcljc.net.netstuff')
+    arg (value: 'testcljc.i18n.i18nstuff')
+    arg (value: 'testcljc.crypto.cryptostuff')
+    arg (value: 'testcljc.crypto.mimestuff')
+    arg (value: 'testcljc.dbio.dbstuff')
+    arg (value: 'testcljc.tardis.auth')
+  }
+  copy (todir: "${buildTestDir}") {
+    fileset (dir: "${testDir}/clojure") {
+      exclude (name: '**/*.clj')
+      exclude (name: '**/.svn')
+    }
+  }
+}
+
+
+def runtests_Java() {
+  ant.junit (logfailedtests: true,
+    showoutput: false,
+    printsummary: true,
+    fork: true,
+    haltonfailure: true) {
+    classpath (refid: 'testPathId')
+    formatter (type: 'plain', usefile: false)
+    batchtest (todir: "${reportTestDir}") {
+      fileset (dir: "${buildTestDir}") {
+        include (name: '**/JUTest.*')
+      }
+      formatter (type: 'xml')
+    }
+  }
+}
+
+def runtests_Scala() {
+  ant.taskdef (name: 'scalatest',
+    classname: 'org.scalatest.tools.ScalaTestAntTask') {
+    classpath (refid: 'testPathId')
+  }
+  scalatest (haltonfailure: true,
+    fork: true, 
+    maxmemory: '888M') {
+    reporter (type: 'junitxml', directory: "${reportTestDir}")
+    wildcard (package: 'testzotoh.scala')
+    runpath () {
+      pathelement (path: "${buildTestDir}")
+    }
+  }
+}
+
+def runtests_Clj() {
+  ant.junit (logfailedtests: true,
+    showoutput: false, 
+    printsummary: true, 
+    fork: true, 
+    haltonfailure: true) {
+    classpath (refid: 'testPathId')
+    formatter (type: 'plain', usefile: false)
+    test (name: 'testzotoh.java.frwk.util.ClojureJUnit',
+    todir: "${reportTestDir}") {
+      formatter (type: 'xml')
+    }
+  }
+}
+
+
+
+
+
+
+

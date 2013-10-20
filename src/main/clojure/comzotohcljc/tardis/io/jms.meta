@@ -1,0 +1,16 @@
+[info]
+block-type=czc.tardis.io/JMS
+version=0.0.1
+name=JMS
+
+[conf]
+contextfactory=com.zotoh.blason.mock.jms.MockContextFactory
+providerurl=java://aaa
+connfactory=tcf
+destination=topic.abc
+jndiuser=root
+jndipwd=root
+jmsuser=anonymous
+jmspwd=anonymous
+interval-secs=5
+handler=

@@ -1,0 +1,22 @@
+<ivy-module version="2.0">
+
+  <info organisation="@@APPDOMAIN@@" module="@@APPID@@"/>
+
+  <configurations defaultconf="libjar">
+    <conf name="libjar"  description="the core jar library"/>
+    <conf name="test" extends="libjar" visibility="private" description="internal testing"/>
+  </configurations>
+
+  <publications>
+    <artifact name="@@APPID@@" type="jar" conf="libjar" ext="jar"/>
+  </publications>
+
+  <dependencies defaultconf="libjar">
+
+<!--
+    <dependency org="junit" name="junit" rev="4.11"  conf="libjar->default"/>
+-->
+
+  </dependencies>
+
+</ivy-module>

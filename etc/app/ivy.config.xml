@@ -1,0 +1,28 @@
+<ivysettings>
+
+  <settings defaultResolver="chain-with-local"/>
+  <caches defaultCacheDir="${ivy.lcache.dir}"></caches>
+
+  <resolvers>
+    <chain name="chain-with-local">
+      <filesystem name="local-file-sys">
+        <artifact pattern="${ivy.lrepo.dir}/[organisation]/[module]/[artifact]-[revision].[ext]" />
+      </filesystem>
+      <filesystem name="local-repo">
+        <artifact pattern="${ivy.lrepo.dir}/[organisation]/[module]/[type]s/[artifact]-[revision].[ext]"/>
+        <ivy pattern="${ivy.lrepo.dir}/[organisation]/[module]/ivys/ivy-[revision].xml"/>
+      </filesystem>
+      <ibiblio name="ibiblio" m2compatible="true" />
+      <ibiblio name="maven-1" root="http://repo1.maven.org/maven2" m2compatible="true" />
+      <ibiblio name="central" root="http://central.maven.org/maven2" m2compatible="true" />
+      <ibiblio name="mandubian-mvn" root="http://mandubian-mvn.googlecode.com/svn/trunk/mandubian-mvn/repository"
+          m2compatible="true" />
+    </chain>
+  </resolvers>
+
+  <conflict-managers>
+      <latest-revision/>
+  </conflict-managers>
+
+</ivysettings>
+

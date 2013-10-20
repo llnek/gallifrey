@@ -1,0 +1,14 @@
+[info]
+block-type=czc.tardis.io/IMAP
+version=0.0.1
+name=IMAP
+
+[conf]
+host=imap.gmail.com
+port=993
+deletemsg=false
+username=joe
+passwd=secret
+interval-secs=300
+delay-secs=0
+handler=

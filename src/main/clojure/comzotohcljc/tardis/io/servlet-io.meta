@@ -1,0 +1,11 @@
+[info]
+block-type=czc.tardis.io/JettyIO
+version=0.0.1
+name=JettyIO
+
+[conf]
+host=localhost
+port=8080
+server-keyfile=
+keypasswd=
+handler=

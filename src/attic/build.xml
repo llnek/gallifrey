@@ -1,0 +1,612 @@
+<project name="gallifrey" basedir="." default="release" xmlns:ivy="antlib:org.apache.ivy.ant">
+
+  <property name="PID-DISTRO" value="${ant.project.name}-distro"/>
+  <property name="PID" value="${ant.project.name}"/>
+  <property file="build.properties" />
+  <include file="${basedir}/common.xml"/>
+
+
+
+  <!--
+       paths used for compilation and run
+       -->
+
+  <path id="compile.path.id">
+    <fileset dir="${lib.dir}/libjar" />
+    <fileset dir="${distrib.dir}" />
+    <fileset dir="${scala.lib.dir}"/>
+    <fileset dir="${clojure.dir}"/>
+    <path location="${build.dir}" />
+    <path location="${src.dir}/clojure" />
+  </path>
+
+  <path id="test.path.id">
+    <fileset dir="${lib.dir}/test" >
+      <include name="*.jar"/>
+    </fileset>
+    <fileset dir="${scala.lib.dir}">
+      <include name="*.jar"/>
+    </fileset>
+    <fileset dir="${clojure.dir}" >
+      <include name="*.jar"/>
+    </fileset>
+    <fileset dir="${distrib.dir}">
+      <include name="*.jar"/>
+    </fileset>
+    <path location="${build.dir}" />
+    <path location="${build.test.dir}" />
+    <path location="${test.dir}/clojure" />
+  </path>
+
+
+  <!--
+       compile source code
+       -->
+
+  <target name="compile_java">
+    <javac sourcepath="" srcdir="${src.dir}/java" destdir="${build.dir}"
+      includeantruntime="false" excludes=""
+      debug="${build.debug}" debuglevel="lines,vars,source" classpathref="compile.path.id">
+      <compilerarg line="-Xlint:deprecation -Xlint:unchecked"/>
+      <include name="**/*.java"/>
+    </javac>
+  </target>
+
+  <target name="clj-hhh-main">
+    <java classname="clojure.lang.Compile" fork="true" failonerror="true" maxmemory="2048m" classpathref="compile.path.id">
+      <sysproperty key="clojure.compile.warn-on-reflection" value="true"/>
+      <sysproperty key="clojure.compile.path" value="${build.dir}" />
+      <arg value="comzotohcljc.tardis.core.constants" />
+      <arg value="comzotohcljc.tardis.core.climain" />
+      <arg value="comzotohcljc.tardis.core.sys" />
+      <arg value="comzotohcljc.tardis.etc.cmdline" />
+      <arg value="comzotohcljc.tardis.etc.core" />
+      <arg value="comzotohcljc.tardis.etc.misc" />
+      <arg value="comzotohcljc.tardis.impl.defaults" />
+      <arg value="comzotohcljc.tardis.impl.ext" />
+      <arg value="comzotohcljc.tardis.impl.sys" />
+      <arg value="comzotohcljc.tardis.impl.exec" />
+    </java>
+  </target>
+
+  <target name="clj-hhh-io">
+    <java classname="clojure.lang.Compile" fork="true" failonerror="true" maxmemory="2048m" classpathref="compile.path.id">
+      <sysproperty key="clojure.compile.warn-on-reflection" value="true"/>
+      <sysproperty key="clojure.compile.path" value="${build.dir}" />
+      <arg value="comzotohcljc.tardis.io.context"/>
+      <arg value="comzotohcljc.tardis.io.core"/>
+      <!--
+      <arg value="comzotohcljc.tardis.io.events"/>
+      -->
+      <arg value="comzotohcljc.tardis.io.socket"/>
+      <arg value="comzotohcljc.tardis.io.files"/>
+      <arg value="comzotohcljc.tardis.io.http"/>
+      <arg value="comzotohcljc.tardis.io.jms"/>
+      <arg value="comzotohcljc.tardis.io.loops"/>
+      <arg value="comzotohcljc.tardis.io.mails"/>
+      <arg value="comzotohcljc.tardis.io.netty"/>
+      <arg value="comzotohcljc.tardis.io.servlet"/>
+      <arg value="comzotohcljc.tardis.io.triggers"/>
+    </java>
+  </target>
+
+  <target name="clj-hhh-auth">
+    <java classname="clojure.lang.Compile" fork="true" failonerror="true" maxmemory="2048m" classpathref="compile.path.id">
+      <sysproperty key="clojure.compile.warn-on-reflection" value="true"/>
+      <sysproperty key="clojure.compile.path" value="${build.dir}" />
+      <arg value="comzotohcljc.tardis.auth.dms" />
+      <arg value="comzotohcljc.tardis.auth.core" />
+      <arg value="comzotohcljc.tardis.auth.rm" />
+      <arg value="comzotohcljc.tardis.auth.shiro" />
+    </java>
+  </target>
+
+  <target name="clj-hhh-mvc">
+    <java classname="clojure.lang.Compile" fork="true" failonerror="true" maxmemory="2048m" classpathref="compile.path.id">
+      <sysproperty key="clojure.compile.warn-on-reflection" value="true"/>
+      <sysproperty key="clojure.compile.path" value="${build.dir}" />
+      <arg value="comzotohcljc.tardis.mvc.ios" />
+      <arg value="comzotohcljc.tardis.mvc.tpls" />
+      <arg value="comzotohcljc.tardis.mvc.handler" />
+    </java>
+  </target>
+
+  <target name="clj-dbio">
+    <java classname="clojure.lang.Compile" fork="true" failonerror="true" maxmemory="2048m" classpathref="compile.path.id">
+      <sysproperty key="clojure.compile.warn-on-reflection" value="true"/>
+      <sysproperty key="clojure.compile.path" value="${build.dir}" />
+      <arg value="comzotohcljc.dbio.core" />
+      <arg value="comzotohcljc.dbio.sql" />
+      <arg value="comzotohcljc.dbio.simple" />
+      <arg value="comzotohcljc.dbio.composite" />
+      <arg value="comzotohcljc.dbio.connect" />
+      <arg value="comzotohcljc.dbio.drivers" />
+      <arg value="comzotohcljc.dbio.sqlserver" />
+      <arg value="comzotohcljc.dbio.h2" />
+      <arg value="comzotohcljc.dbio.oracle" />
+      <arg value="comzotohcljc.dbio.mysql" />
+      <arg value="comzotohcljc.dbio.postgresql" />
+    </java>
+  </target>
+
+  <target name="clj-net">
+    <java classname="clojure.lang.Compile" fork="true" failonerror="true" maxmemory="2048m" classpathref="compile.path.id">
+      <sysproperty key="clojure.compile.warn-on-reflection" value="true"/>
+      <sysproperty key="clojure.compile.path" value="${build.dir}" />
+      <arg value="comzotohcljc.net.comms" />
+      <arg value="comzotohcljc.net.rts" />
+      <arg value="comzotohcljc.netty.comms" />
+    </java>
+  </target>
+
+  <target name="clj-jmx">
+    <java classname="clojure.lang.Compile" fork="true" failonerror="true" maxmemory="2048m" classpathref="compile.path.id">
+      <sysproperty key="clojure.compile.warn-on-reflection" value="true"/>
+      <sysproperty key="clojure.compile.path" value="${build.dir}" />
+      <arg value="comzotohcljc.jmx.names" />
+      <arg value="comzotohcljc.jmx.bean" />
+      <arg value="comzotohcljc.jmx.core" />
+    </java>
+  </target>
+
+  <target name="clj-crypto">
+    <java classname="clojure.lang.Compile" fork="true" failonerror="true" maxmemory="2048m" classpathref="compile.path.id">
+      <sysproperty key="clojure.compile.warn-on-reflection" value="true"/>
+      <sysproperty key="clojure.compile.path" value="${build.dir}" />
+      <arg value="comzotohcljc.crypto.core" />
+      <arg value="comzotohcljc.crypto.codec" />
+      <arg value="comzotohcljc.crypto.stores" />
+      <arg value="comzotohcljc.crypto.ssl" />
+    </java>
+  </target>
+
+  <target name="clj-util">
+    <java classname="clojure.lang.Compile" fork="true" failonerror="true" maxmemory="2048m" classpathref="compile.path.id">
+      <sysproperty key="clojure.compile.warn-on-reflection" value="true"/>
+      <sysproperty key="clojure.compile.path" value="${build.dir}" />
+      <arg value="comzotohcljc.util.core" />
+      <arg value="comzotohcljc.util.bytes" />
+      <arg value="comzotohcljc.util.cmdline" />
+      <arg value="comzotohcljc.util.constants" />
+      <arg value="comzotohcljc.util.countrycode" />
+      <arg value="comzotohcljc.util.dates" />
+      <arg value="comzotohcljc.util.files" />
+      <arg value="comzotohcljc.util.guids" />
+      <arg value="comzotohcljc.util.io" />
+      <arg value="comzotohcljc.util.meta" />
+      <arg value="comzotohcljc.util.mime" />
+      <arg value="comzotohcljc.util.process" />
+      <arg value="comzotohcljc.util.seqnum" />
+      <arg value="comzotohcljc.util.str" />
+      <arg value="comzotohcljc.util.usastate" />
+      <arg value="comzotohcljc.util.ini" />
+      <arg value="comzotohcljc.util.scheduler" />
+      <arg value="comzotohcljc.i18n.resources" />
+    </java>
+  </target>
+
+  <target name="compile-clj">
+    <antcall target="clj-util"/>
+    <antcall target="clj-crypto"/>
+    <antcall target="clj-net"/>
+    <antcall target="clj-jmx"/>
+    <antcall target="clj-dbio"/>
+    <antcall target="clj-hhh-auth"/>
+    <antcall target="clj-hhh-io"/>
+    <antcall target="clj-hhh-mvc"/>
+    <antcall target="clj-hhh-main"/>
+    <copy todir="${build.dir}">
+      <fileset dir="${src.dir}/clojure">
+        <exclude name="**/*.meta"/>
+        <exclude name="**/*.clj"/>
+        <exclude name="**/.svn"/>
+      </fileset>
+    </copy>
+  </target>
+
+  <target name="compile_and_jar">
+
+    <!-- build the classloaders -->
+    <scalac srcdir="${src.dir}/scala" destdir="${build.dir}" classpathref="compile.path.id"
+      fork="true" jvmargs="-Xmx5120M -Xms1024M">
+      <include name="com/zotoh/gallifrey/loaders/**/*.scala"/>
+    </scalac>
+    <jar destfile="${distrib.dir}/${PID}-spec-${build.version}.jar" >
+      <fileset dir="${build.dir}">
+      </fileset>
+    </jar>
+
+    <delete dir="${build.dir}"/>
+    <mkdir dir="${build.dir}"/>
+
+    <!-- build java + scala stuff -->
+
+    <antcall target="compile_java" />
+
+    <scalac srcdir="${src.dir}/scala" destdir="${build.dir}" classpathref="compile.path.id"
+      fork="true" jvmargs="-Xmx5120M -Xms1024M">
+      <exclude name="**/loaders/*.scala"/>
+      <include name="**/*.scala"/>
+    </scalac>
+
+    <!-- copy over other resources -->
+    <copy todir="${build.dir}">
+      <fileset dir="${src.dir}/java">
+        <exclude name="**/*.java"/>
+        <exclude name="**/.svn"/>
+      </fileset>
+      <fileset dir="${src.dir}/scala">
+        <exclude name="**/*.scala"/>
+        <exclude name="**/.svn"/>
+      </fileset>
+    </copy>
+
+    <antcall target="compile-clj"/>
+
+    <antcall target="jarit"/>
+  </target>
+
+  <target name="jarit">
+    <jar destfile="${distrib.dir}/${PID}-${build.version}.jar" >
+      <fileset dir="${build.dir}">
+        <exclude name="**/log4j.properties"/>
+        <exclude name="**/logback.xml"/>
+        <exclude name="demo/**"/>
+      </fileset>
+    </jar>
+  </target>
+
+  <!--
+       compile test code
+       -->
+
+  <target name="compile-tests-java">
+    <javac sourcepath="" srcdir="${test.dir}/java" destdir="${build.test.dir}"
+      includeantruntime="false" excludes=""
+      debug="${build.debug}" debuglevel="lines,vars,source" classpathref="test.path.id">
+      <compilerarg line="-Xlint:deprecation -Xlint:unchecked"/>
+      <include name="**/*.java"/>
+    </javac>
+    <copy todir="${build.test.dir}">
+      <fileset dir="${test.dir}/java">
+        <exclude name="**/*.java"/>
+        <exclude name="**/.svn"/>
+      </fileset>
+    </copy>
+  </target>
+
+  <target name="compile-tests-scala">
+    <scalac srcdir="${test.dir}/scala" destdir="${build.test.dir}" classpathref="test.path.id"
+      fork="true" jvmargs="-Xmx5120M -Xms1024M">
+      <include name="**/*.scala"/>
+    </scalac>
+    <copy todir="${build.test.dir}">
+      <fileset dir="${test.dir}/scala">
+        <exclude name="**/*.scala"/>
+        <exclude name="**/.svn"/>
+      </fileset>
+    </copy>
+  </target>
+
+  <target name="compile-tests-clj">
+    <java classname="clojure.lang.Compile" fork="true" failonerror="true" maxmemory="2048m"
+      classpathref="test.path.id">
+      <sysproperty key="clojure.compile.warn-on-reflection" value="true"/>
+      <sysproperty key="clojure.compile.path" value="${build.test.dir}" />
+      <arg value="testcljc.util.byteutils" />
+      <arg value="testcljc.util.codes" />
+      <arg value="testcljc.util.coreutils" />
+      <arg value="testcljc.util.dateutils" />
+      <arg value="testcljc.util.fileutils" />
+      <arg value="testcljc.util.guids" />
+      <arg value="testcljc.util.ioutils" />
+      <arg value="testcljc.util.metautils" />
+      <arg value="testcljc.util.mimeutils" />
+      <arg value="testcljc.util.procutils" />
+      <arg value="testcljc.util.seqnumgen" />
+      <arg value="testcljc.util.strutils" />
+      <arg value="testcljc.util.win32ini" />
+      <arg value="testcljc.net.netstuff" />
+      <arg value="testcljc.i18n.i18nstuff" />
+      <arg value="testcljc.crypto.cryptostuff" />
+      <arg value="testcljc.crypto.mimestuff" />
+      <arg value="testcljc.dbio.dbstuff" />
+      <arg value="testcljc.tardis.auth" />
+    </java>
+    <copy todir="${build.test.dir}">
+      <fileset dir="${test.dir}/clojure">
+        <exclude name="**/*.clj"/>
+        <exclude name="**/.svn"/>
+      </fileset>
+    </copy>
+  </target>
+
+  <target name="compile_test_code" >
+    <mkdir dir="${report.test.dir}"/>
+    <mkdir dir="${build.test.dir}"/>
+    <antcall target="compile-tests-java"/>
+    <antcall target="compile-tests-scala"/>
+    <antcall target="compile-tests-clj"/>
+  </target>
+
+  <!--
+       run test code
+       -->
+
+  <target name="runtests-java" >
+    <junit logfailedtests="true" showoutput="false" printsummary="yes" 
+      fork="yes" haltonfailure="yes" >
+      <classpath refid="test.path.id"/>
+      <formatter type="plain" usefile="false"/>
+      <batchtest todir="${report.test.dir}">
+          <fileset dir="${build.test.dir}">
+            <include name="**/JUTest.*"/>
+          </fileset>
+          <formatter type="xml"/>
+      </batchtest>
+    </junit>
+  </target>
+
+  <target name="runtests-scala">
+    <taskdef name="scalatest" classname="org.scalatest.tools.ScalaTestAntTask">
+      <classpath refid="test.path.id"/>
+    </taskdef>
+    <scalatest haltonfailure="true" fork="true" maxmemory="888M">
+      <reporter type="junitxml" directory="${report.test.dir}"/>
+      <wildcard package="testzotoh.scala"/>
+      <runpath>
+        <pathelement path="${build.test.dir}"/>
+      </runpath>
+    </scalatest>
+  </target>
+
+  <target name="runtests-clj" >
+    <junit logfailedtests="true" showoutput="false" printsummary="yes" fork="yes" haltonfailure="yes" >
+      <classpath refid="test.path.id"/>
+      <formatter type="plain" usefile="false"/>
+      <test name="testzotoh.java.frwk.util.ClojureJUnit" todir="${report.test.dir}">
+        <formatter type="xml"/>
+      </test>
+    </junit>
+
+  </target>
+
+
+  <target name="run_test_code" >
+    <!-- <echo message="No test to run."/> -->
+    <antcall target="runtests-java"/>
+    <antcall target="runtests-scala"/>
+    <antcall target="runtests-clj"/>
+  </target>
+
+  <!--
+       pack api and other docs
+       -->
+
+
+  <target name="pack_all_docs">
+    <mkdir dir="${pack.dir}/docs/api"/>
+    <copy todir="${pack.dir}/docs">
+      <fileset dir="${basedir}/docs" erroronmissingdir="false">
+        <exclude name="dummy.txt"/>
+        <exclude name=".svn"/>
+      </fileset>
+    </copy>
+    <java classname="autodoc.autodoc" fork="true" failonerror="true">
+      <classpath refid="compile.path.id"/>
+      <arg value="--name=Hohenheim"/>
+      <arg value="--root=${basedir}"/>
+      <arg value="--source-path=src/main/clojure"/>
+      <arg value="--output-path=${pack.dir}/docs/api"/>
+    </java>
+  </target>
+
+
+  <!--
+       pack libraries
+       -->
+
+  <target name="pack_all_libs">
+    <copy todir="${pack.dir}/lib">
+      <fileset dir="${lib.dir}/libjar" >
+      </fileset>
+    </copy>
+  </target>
+
+  <!--
+       pack distro libs
+       -->
+
+  <target name="pack_all_dist">
+    <copy todir="${pack.dir}/dist">
+      <fileset dir="${distrib.dir}">
+        <exclude name="*-spec-*.jar"/>
+      </fileset>
+    </copy>
+    <copy todir="${pack.dir}/boot">
+      <fileset dir="${distrib.dir}">
+        <include name="*-spec-*.jar"/>
+      </fileset>
+    </copy>
+  </target>
+
+  <!--
+       pack resources
+       -->
+
+  <target name="pack_resources">
+
+    <copy todir="${pack.dir}/blocks" flatten="true">
+      <fileset dir="${src.dir}/clojure">
+        <include name="**/*.meta"/>
+      </fileset>
+    </copy>
+
+    <copy todir="${pack.dir}/etc">
+      <fileset dir="${basedir}/etc"/>
+    </copy>
+
+  </target>
+
+  <!--
+       pack scripts
+       -->
+
+  <target name="pack_bin_scripts">
+    <copy todir="${pack.dir}/bin" >
+      <fileset dir="${basedir}/bin" erroronmissingdir="false">
+        <exclude name=".svn"/>
+      </fileset>
+    </copy>
+    <chmod dir="${pack.dir}/bin" perm="755" includes="*"/>
+  </target>
+
+  <!--
+       pack license files
+       -->
+
+  <target name="pack_all_lics">
+    <copy todir="${pack.dir}/lics" >
+      <fileset dir="${basedir}/lics" erroronmissingdir="false">
+        <exclude name=".svn"/>
+      </fileset>
+    </copy>
+  </target>
+
+  <!--
+       pack source code
+       -->
+
+  <target name="pack_source_code" >
+    <copy todir="${pack.dir}/docs/src/main/clojure">
+      <fileset dir="${src.dir}/clojure" />
+    </copy>
+    <copy todir="${pack.dir}/docs/src/main/scala">
+      <fileset dir="${src.dir}/scala" />
+    </copy>
+    <copy todir="${pack.dir}/docs/src/main/java">
+      <fileset dir="${src.dir}/java" />
+    </copy>
+  </target>
+
+  <!--
+       pack samples and/or demos
+       -->
+  <target name="create-demo-app">
+    <if><or>
+        <equals arg1="${appid}" arg2="jetty"/>
+        <equals arg1="${appid}" arg2="mvc"/></or>
+      <then>
+        <mkdir dir="${demo.dir}/${appid}/public/images"/>
+        <mkdir dir="${demo.dir}/${appid}/public/scripts"/>
+        <mkdir dir="${demo.dir}/${appid}/public/styles"/>
+        <copy todir="${demo.dir}/${appid}/public/images" file="${basedir}/etc/web/favicon.ico"/>
+        <copy todir="${demo.dir}/${appid}/public/scripts" file="${demo.src}/demo/test.js"/>
+        <copy todir="${demo.dir}/${appid}/public/styles" file="${demo.src}/demo/main.css"/>
+        <mkdir dir="${demo.dir}/${appid}/src/main/resources/coffee"/>
+        <mkdir dir="${demo.dir}/${appid}/src/main/resources/less"/>
+        <mkdir dir="${demo.dir}/${appid}/src/main/resources/js"/>
+        <copy todir="${demo.dir}/${appid}" file="${basedir}/etc/web/build.xml"/>
+      </then>
+      <else>
+        <copy todir="${demo.dir}/${appid}" file="${basedir}/etc/app/build.xml"/>
+      </else>
+    </if>
+    <if><equals arg1="${appid}" arg2="jetty"/>
+      <then>
+        <mkdir dir="${demo.dir}/${appid}/WEB-INF/classes"/>
+        <mkdir dir="${demo.dir}/${appid}/WEB-INF/lib"/>
+        <copy todir="${demo.dir}/${appid}/WEB-INF" file="${basedir}/etc/jetty/web.xml"/>
+      </then>
+    </if>
+    <mkdir dir="${demo.dir}/${appid}/POD-INF/classes"/>
+    <mkdir dir="${demo.dir}/${appid}/POD-INF/patch"/>
+    <mkdir dir="${demo.dir}/${appid}/POD-INF/lib"/>
+    <!-- <copy todir="${demo.dir}/${appid}/POD-INF/lib" file="${distrib.dir}/demo.jar"/> -->
+    <mkdir dir="${demo.dir}/${appid}/META-INF"/>
+    <echo message="" file="${demo.dir}/${appid}/META-INF/RELEASE-NOTES.txt"/>
+    <echo message="" file="${demo.dir}/${appid}/META-INF/NOTES.txt"/>
+    <echo message="" file="${demo.dir}/${appid}/META-INF/LICENSE.txt"/>
+    <echo message="" file="${demo.dir}/${appid}/META-INF/README.md"/>
+    <copy todir="${demo.dir}/${appid}/META-INF" file="${basedir}/etc/app/MANIFEST.MF"/>
+    <replace file="${demo.dir}/${appid}/META-INF/MANIFEST.MF" token="@@APPKEY@@" value="${appkey}"/>
+    <replace file="${demo.dir}/${appid}/META-INF/MANIFEST.MF"
+      token="@@APPMAINCLASS@@" value="demo.${appid}.DemoMain"/>
+    <copy todir="${demo.dir}/${appid}/conf">
+      <fileset dir="${demo.src}/demo/${appid}">
+        <include name="*.conf"/>
+      </fileset>
+    </copy>
+    <copy todir="${demo.dir}/${appid}/conf" file="${basedir}/etc/app/app.conf"/>
+    <replace file="${demo.dir}/${appid}/conf/app.conf" token="@@USER@@" value="test"/>
+    <copy todir="${demo.dir}/${appid}/src/main/scala/demo/${appid}">
+      <fileset dir="${demo.src}/demo/${appid}">
+        <exclude name="**/env.conf"/>
+      </fileset>
+    </copy>
+    <mkdir dir="${demo.dir}/${appid}/src/main/clojure"/>
+    <mkdir dir="${demo.dir}/${appid}/src/main/java"/>
+    <mkdir dir="${demo.dir}/${appid}/docs"/>
+    <copy todir="${demo.dir}/${appid}" file="${basedir}/etc/app/build.properties"/>
+    <replace file="${demo.dir}/${appid}/build.properties" token="@@GALLIFREYHOME@@" value="${basedir}/../.."/>
+    <replace file="${demo.dir}/${appid}/build.xml" token="@@APPID@@" value="${appid}"/>
+    <replace file="${demo.dir}/${appid}/build.xml" token="@@APPCLJFILES@@" value=""/>
+    <copy todir="${demo.dir}/${appid}" file="${basedir}/etc/app/ivysettings.xml"/>
+
+    <copy todir="${demo.dir}/${appid}" file="${basedir}/etc/app/ivy.xml"/>
+    <replace file="${demo.dir}/${appid}/ivy.xml" token="@@APPDOMAIN@@" value="demoware"/>
+    <replace file="${demo.dir}/${appid}/ivy.xml" token="@@APPID@@" value="${appid}"/>
+
+    <copy todir="${demo.dir}/${appid}" file="${basedir}/etc/app/pom.xml"/>
+    <replace file="${demo.dir}/${appid}/pom.xml" token="@@APPDOMAIN@@" value="demoware"/>
+    <replace file="${demo.dir}/${appid}/pom.xml" token="@@APPID@@" value="${appid}"/>
+    <zip destfile="${demo.dir}/${appid}.pod"><fileset dir="${demo.dir}/${appid}"/></zip>
+    <delete dir="${demo.dir}/${appid}"/>
+  </target>
+
+  <target name="pack_samples" >
+    <property name="demo.src" value="${src.dir}/scala/com/zotoh/gallifrey"/>
+    <property name="demo.dir" value="${pack.dir}/docs/samples"/>
+    <for param="dir">
+      <path>
+        <dirset dir="${demo.src}">
+          <include name="demo/*"/>
+        </dirset>
+      </path>
+      <sequential>
+        <var name="appkey" value="" unset="true"/>
+        <var name="appid" value="" unset="true"/>
+        <basename property="appid" file="@{dir}"/>
+        <generateguid property="appkey" />
+        <antcall target="create-demo-app"/>
+      </sequential>
+    </for>
+  </target>
+
+
+  <!--
+       public TARGETS
+       -->
+
+
+  <target name="release" depends="common.pub-distro"/>
+  <target name="jar" depends="common.pub-jar"/>
+
+  <target name="gentest" depends="common.fulltest-build"/>
+  <target name="test" depends="common.test-build"/>
+
+
+  <!--
+       housekeeping stuff
+       -->
+
+
+  <target name="clean4distro">
+    <delete dir="${ivy.lcache.dir}/com.zotoh/${ant.project.name}" quiet="true"/>
+    <delete dir="${ivy.lrepos.dir}/com.zotoh/${ant.project.name}" quiet="true"/>
+  </target>
+
+</project>
+
+
+

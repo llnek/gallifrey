@@ -1,0 +1,14 @@
+[info]
+block-type=czc.tardis.io/POP3
+version=0.0.1
+name=POP3
+
+[conf]
+host=pop.gmail.com
+port=995
+deletemsg=false
+username=joe
+passwd=secret
+interval-secs=300
+delay-secs=0
+handler=

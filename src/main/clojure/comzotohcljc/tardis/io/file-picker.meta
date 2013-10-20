@@ -1,0 +1,15 @@
+[info]
+block-type=czc.tardis.io/FilePicker
+version=0.0.1
+name=FILEPicker
+
+
+[conf]
+target-folder=/home/dropbox
+recv-folder=/home/joe
+# reg-ex, blank => all
+fmask=
+# 5mins
+interval-secs=300
+delay-secs=0
+handler=
