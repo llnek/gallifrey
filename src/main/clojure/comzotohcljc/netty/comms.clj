@@ -638,21 +638,28 @@
       nil)
     ))
 
-(defn- maybe-last-req [ ^ChannelHandlerContext ctx req]
-  (when (and (instance? HttpChunk req)
-             (.isLast ^HttpChunk req))
-    (nioComplete ctx req)))
+(defn- maybe-last-req [ ^ChannelHandlerContext ctx msg]
+  (cond
+    (instance? HttpRequest msg)
+    (nioComplete ctx msg)
+
+    (and (instance? HttpChunk msg)
+         (.isLast ^HttpChunk msg))
+    (nioComplete ctx msg)
+
+    :else
+    nil))
 
 (defn- nio-req-decode "" [^ChannelHandlerContext ctx ^HttpMessage req]
   (let [ ch (.getChannel ctx)
          attObj (ga-map ch)
          ^HttpPostRequestDecoder c (:decoder attObj) ]
-    (when (and (notnil? c)
-               (instance? HttpChunk req))
+    (when (notnil? c)
       (with-local-vars [err false]
         (try
-            (.offer c ^HttpChunk req)
-            (read-formdata ctx c)
+          (when (instance? HttpChunk req)
+            (.offer c ^HttpChunk req))
+          (read-formdata ctx c)
           (catch Throwable e#
             (var-set err true)
             (error e# "")
@@ -665,11 +672,12 @@
          msginfo (:info attObj) ]
     (try
       (let [ rc (maybe-formdata ch req msginfo) ]
-        (if (nil? rc)
-          (when-not (:is-chunked msginfo)
-            (nioSockitDown ctx (.getContent req))
-            (nioComplete ctx req))
-          (nio-req-decode ctx req)))
+        (when-not (:is-chunked msginfo)
+          (if (nil? rc)
+            (do
+              (nioSockitDown ctx (.getContent req))
+              (nioComplete ctx req))
+            (nio-req-decode ctx req))))
       (catch Throwable e#
         (error e# "")
         (reply-xxx 400)))
