@@ -197,6 +197,8 @@
         (getHeaderValues [_ nm] (.getHeaders req nm))
         (getHeaders [_] (.getHeaderNames req))
         (getHeaderValue [_ nm] (HttpHeaders/getHeader req nm))
+        (hasHeader [_ nm] (.containsHeader req nm))
+
         (getParameterValues [_ nm]
           (let [ dc (QueryStringDecoder. (.getUri req))
                  rc (.get (.getParameters dc) nm) ]
@@ -205,6 +207,9 @@
           (let [ dc (QueryStringDecoder. (.getUri req))
                  m (.getParameters dc) ]
             (.keySet m)))
+        (hasParameter [this nm]
+          (.contains (.getParameters this) nm))
+
         (getParameterValue [_ nm]
           (let [ dc (QueryStringDecoder. (.getUri req))
                  ^List rc (.get (.getParameters dc) nm) ]

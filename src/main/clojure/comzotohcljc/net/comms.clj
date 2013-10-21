@@ -45,6 +45,8 @@
 (import '(java.net URL URI))
 (import '(org.apache.http.params HttpConnectionParams))
 (import '(org.apache.http.entity InputStreamEntity))
+
+(import '(com.zotoh.frwk.net ULFormItems ULFileItem))
 (import '(com.zotoh.frwk.io XData))
 
 
@@ -72,6 +74,12 @@
    clen
    headers
    params] )
+
+(defn getFormUploads "" [^ULFormItems items]
+  (filter #(not (.isFormField ^ULFileItem %)) (.getAll items)))
+
+(defn getFormFields "" [^ULFormItems items]
+  (filter #(.isFormField ^ULFileItem %) (.getAll items)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; internal functions to support apache http client.

@@ -74,6 +74,7 @@
   TextWebSocketFrame
   PingWebSocketFrame
   PongWebSocketFrame))
+(import '(com.zotoh.gallifrey.io HTTPEvent))
 (import '(com.zotoh.frwk.net NetUtils))
 (import '(com.zotoh.frwk.io XData))
 (import '(com.zotoh.frwk.util TFac))
@@ -81,7 +82,7 @@
 (use '[comzotohcljc.crypto.ssl :only [make-sslContext make-sslClientCtx] ])
 (use '[comzotohcljc.net.rts])
 (use '[comzotohcljc.util.files :only [save-file get-file] ])
-(use '[comzotohcljc.util.core :only [_MB uid notnil? Try! TryC] ])
+(use '[comzotohcljc.util.core :only [_MB uid notnil? stringify Try! TryC] ])
 (use '[comzotohcljc.util.str :only [strim nsb hgl?] ])
 (use '[comzotohcljc.util.io :only [make-baos] ])
 
@@ -146,6 +147,7 @@
     (kill9 bs)
     (-> (.close ^ChannelGroup cg)
         (addListener { :done (fn [_] (kill9 bs)) }))))
+
 
 (defn makeHttpReply "Make a netty http-response object."
   (^HttpResponse [] (makeHttpReply 200))
@@ -271,7 +273,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn- inizClient ^ChannelPipelineFactory [options]
-  (reify ChannelPipelineFactory 
+  (reify ChannelPipelineFactory
     (getPipeline [_]
       (let [ ssl (= (.getProtocol ^URL (:targetUrl options)) "https")
              pl (org.jboss.netty.channel.Channels/pipeline)

@@ -49,10 +49,12 @@ public interface HTTPEvent  extends IOEvent {
   public List<String> getHeaderValues(String nm);
   public Set<String> getHeaders();
   public String getHeaderValue(String nm);
-
+  public boolean hasHeader(String nm);
+  
   public List<String> getParameterValues(String nm);
   public Set<String> getParameters();
   public String getParameterValue(String nm);
+  public boolean hasParameter(String nm);
 
   public String localAddr();
 

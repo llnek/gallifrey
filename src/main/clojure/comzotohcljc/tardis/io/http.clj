@@ -32,6 +32,7 @@
 (import '(com.zotoh.frwk.core
   Versioned Hierarchial
   Identifiable Disposable Startable))
+(import '(org.apache.commons.codec.binary Base64))
 
 (import '(org.eclipse.jetty.server
   Connector
@@ -50,7 +51,7 @@
 (import '(com.zotoh.gallifrey.io HTTPResult HTTPEvent JettyUtils))
 (import '(com.zotoh.gallifrey.core Container))
 
-(use '[comzotohcljc.util.core :only [MuObj uid TryC make-mmap test-cond] ])
+(use '[comzotohcljc.util.core :only [MuObj notnil? uid TryC make-mmap test-cond stringify] ])
 (use '[clojure.tools.logging :only [info warn error debug] ])
 (use '[comzotohcljc.crypto.ssl])
 (use '[comzotohcljc.crypto.codec :only [pwdify] ])
@@ -64,6 +65,15 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;(set! *warn-on-reflection* true)
 
+
+(defn scanBasicAuth "" [^HTTPEvent evt]
+  (if (.hasHeader evt "authorization")
+    (let [ s (stringify (Base64/decodeBase64 (.getHeaderValue evt "authorization")))
+           pos (.indexOf s ":") ]
+      (if (pos > 0)
+        [ (.substring s 0 pos) (.substring s (inc pos)) ]
+        []))
+    nil))
 
 (defn makeServletEmitter "" [^Container parObj]
   (let [ eeid (next-long)
@@ -374,8 +384,8 @@
       (encoding [_] (.getCharacterEncoding req))
       (contextPath [_] (.getContextPath req))
 
+      (hasHeader [_ nm] (notnil? (.getHeader req nm)))
       (getHeaderValue [_ nm] (.getHeader req nm))
-
       (getHeaderValues [_ nm]
         (let [ rc (ArrayList.) ]
           (doseq [ s (seq (.getHeaders req nm)) ]
@@ -387,6 +397,8 @@
             (.add rc s))) )
 
       (getParameterValue [_ nm] (.getParameter req nm))
+      (hasParameter [_ nm]
+        (.contains (.getParameters req) nm))
 
       (getParameterValues [_ nm]
         (let [ rc (ArrayList.) ]

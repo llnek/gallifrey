@@ -48,10 +48,13 @@
 (import '(com.zotoh.wflow.core Scope))
 
 
-(use '[comzotohcljc.util.core :only [stringify make-mmap uid load-javaprops] ])
+(use '[comzotohcljc.util.core :only [notnil? stringify make-mmap uid load-javaprops] ])
 (use '[comzotohcljc.crypto.codec :only [pwdify] ])
 (use '[comzotohcljc.util.str :only [nsb hgl? strim] ])
+(use '[comzotohcljc.net.comms :only [getFormFields] ])
+
 (use '[comzotohcljc.tardis.core.constants])
+(use '[comzotohcljc.tardis.io.http :only [scanBasicAuth] ])
 (use '[comzotohcljc.tardis.auth.dms])
 (use '[comzotohcljc.dbio.connect :only [dbio-connect] ])
 (use '[comzotohcljc.dbio.core])
@@ -168,30 +171,24 @@
              ^comzotohcljc.tardis.auth.core.AuthPlugin
              pa (:auth (.getAttr ctr K_PLUGINS))
              ^HTTPEvent evt (.event ^Scope scope)
+             ba (scanBasicAuth evt)
              data (.data evt)
              ^comzotohcljc.netty.ios.WebSession ss (.getSession evt) ]
-        (debug "dude ! , data = " (type data))
         (when (nil? pa) (throw (PluginError. "AuthPlugin missing.")))
-        (debug "auth-plugin - ok")
         (with-local-vars [user "" pwd ""]
           (cond
             (instance? ULFormItems data)
-            (doseq [ ^ULFileItem
-                     x (filter #(.isFormField ^ULFileItem %)
-                               (.getAll ^ULFormItems data)) ]
-              (debug "Field-name ===== " (.getFieldName x))
-              (debug "Field-val ===== " (.getString x))
+            (doseq [ ^ULFileItem x (getFormFields data) ]
+              (debug "Form field: " (.getFieldName x) " = " (.getString x))
               (case (.getFieldName x)
                 "password" (var-set pwd  (.getString x))
                 "user" (var-set user (.getString x))
                 nil))
 
-            (hgl? (.getHeaderValue evt "authorization"))
-            (let [ s (stringify (Base64/decodeBase64 (.getHeaderValue evt "authorization")))
-                   pos (.indexOf s ":") ]
-              (when (pos > 0)
-                (var-set pwd (.substring s (inc pos)))
-                (var-set user (.substring s 0 pos))))
+            (notnil? ba)
+            (do
+              (var-set user (first ba))
+              (var-set pwd (last ba)))
 
             (and (hgl? (.getParameterValue evt LF-PASSWORD))
                  (hgl? (.getParameterValue evt LF-USER)))
@@ -201,8 +198,7 @@
 
             :else
             nil)
-          (debug "USER ==== " @user)
-          (debug "PWD ==== " @pwd)
+
           (if (and (hgl? @user)
                    (hgl? @pwd))
             (let [ acct (.getAccount pa @user @pwd)
