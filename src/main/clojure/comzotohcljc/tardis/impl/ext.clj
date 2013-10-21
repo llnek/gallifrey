@@ -39,7 +39,7 @@
 
 (import '(com.zotoh.gallifrey.io IOEvent))
 (import '(com.zotoh.frwk.util Schedulable CoreUtils))
-(import '(com.zotoh.wflow.core Scope))
+(import '(com.zotoh.wflow.core Job))
 (import '(com.zotoh.wflow Pipeline))
 
 
@@ -87,7 +87,7 @@
   (stop [_])
   (dispose [_] ))
 
-(defn- make-job "" ^Scope [_container evt]
+(defn- make-job "" ^Job [_container evt]
   (let [ impl (make-mmap)
          jid (next-long) ]
     (with-meta
@@ -101,7 +101,7 @@
         (getf [_ k] (.mm-g impl k))
         (clrf! [_ k] (.mm-r impl k))
 
-        Scope
+        Job
 
         (container [_] _container)
         (setv [this k v] (.setf! this k v))
@@ -109,7 +109,7 @@
         (event [_] evt)
         (id [_] jid))
 
-      { :typeid (keyword "czc.tardis.impl/Scope") } )))
+      { :typeid (keyword "czc.tardis.impl/Job") } )))
 
 (defprotocol ^:private JobCreator
   ""

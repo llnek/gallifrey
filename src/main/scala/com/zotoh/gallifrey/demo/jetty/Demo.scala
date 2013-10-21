@@ -26,7 +26,7 @@ import com.zotoh.gallifrey.runtime.AppMain
 import com.zotoh.gallifrey.core.Container
 import org.json._
 
-import com.zotoh.wflow.core.Scope
+import com.zotoh.wflow.core.Job
 import com.zotoh.wflow._
 
 /**
@@ -66,7 +66,7 @@ class Demo extends PipelineDelegate {
   def onError(err:Throwable, curPt:FlowPoint) = null
 
   val task1= new Work() {
-    def perform(cur:FlowPoint, job:Scope, arg:Any) = {
+    def perform(cur:FlowPoint, job:Job, arg:Any) = {
 
         val ev= job.event.asInstanceOf[HTTPEvent]
         val res= ev.getResultObj

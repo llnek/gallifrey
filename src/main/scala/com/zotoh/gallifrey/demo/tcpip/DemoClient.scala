@@ -28,7 +28,7 @@ import com.zotoh.frwk.util.CoreUtils._
 import com.zotoh.gallifrey.runtime.AppMain
 import com.zotoh.gallifrey.core.Container
 
-import com.zotoh.wflow.core.Scope
+import com.zotoh.wflow.core.Job
 import com.zotoh.wflow._
 import org.json.JSONObject
 import com.zotoh.frwk.server.Service
@@ -50,7 +50,7 @@ class DemoClient extends PipelineDelegate {
     // opens a socket and write something back to parent process
     val me=this
     new Delay(2000).chain( new PTask( new Work() {
-      def perform(cur:FlowPoint, job:Scope, arg:Any) = {
+      def perform(cur:FlowPoint, job:Job, arg:Any) = {
           pipe.container().getService("default-sample") match {
             case tcp:Service =>
               val s= STU.replace(_textMsg,"${TS}", new JDate().toString )

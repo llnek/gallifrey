@@ -19,7 +19,7 @@
 
 package com.zotoh.wflow
 
-import com.zotoh.wflow.core.Scope
+import com.zotoh.wflow.core.Job
 
 /**
  * @author kenl
@@ -29,7 +29,7 @@ class WhilePoint(s:FlowPoint , a:While) extends ConditionalPoint(s,a) {
 
   private var _body:FlowPoint =null
 
-  def eval(j:Scope ) = {
+  def eval(j:Job ) = {
     var rc:FlowPoint = this
     val c= getClosureArg()
 

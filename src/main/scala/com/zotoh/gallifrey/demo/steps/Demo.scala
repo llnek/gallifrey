@@ -21,7 +21,7 @@ package demo.steps
 import com.zotoh.gallifrey.runtime.AppMain
 import com.zotoh.gallifrey.core.Container
 
-import com.zotoh.wflow.core.Scope
+import com.zotoh.wflow.core.Job
 import com.zotoh.wflow._
 import org.json.JSONObject
 
@@ -68,7 +68,7 @@ class Demo extends PipelineDelegate {
   // step1. choose a method to authenticate the user
   // here, we'll use a switch() to pick which method
   private val AuthUser = new Switch(new SwitchChoiceExpr() {
-            def getChoice(j:Scope) = {
+            def getChoice(j:Job) = {
               // hard code to use facebook in this example, but you
               // could check some data from the job, such as URI/Query params
               // and decide on which mth-value to switch() on.
@@ -83,7 +83,7 @@ class Demo extends PipelineDelegate {
 
   // step2.
   private val get_profile = new Work() {
-    def perform(cur:FlowPoint, job:Scope, arg:Any) = {
+    def perform(cur:FlowPoint, job:Job, arg:Any) = {
       println("Step(2): Get user profile\n-> user is superuser.\n")
       null
     }
@@ -95,7 +95,7 @@ class Demo extends PipelineDelegate {
   // issues encountered with EC2 while trying to grant permission.
   // so here , we are using a while() to do that.
   private val perm_ami = new Work() {
-    def perform(cur:FlowPoint, job:Scope, arg:Any) = {
+    def perform(cur:FlowPoint, job:Job, arg:Any) = {
       job.getv("ami_count") match {
         case n:Int if (n == 2) =>
           println("Step(3): Granted permission for user to launch this ami(id).\n")
@@ -109,7 +109,7 @@ class Demo extends PipelineDelegate {
 
   private val prov_ami = new While(new PTask(perm_ami),
       new BoolExpr() {
-        def evaluate(j:Scope) = {
+        def evaluate(j:Job) = {
           var c=0
           j.getv("ami_count") match {
             case n:Int =>
@@ -126,7 +126,7 @@ class Demo extends PipelineDelegate {
   // issues encountered with EC2 while trying to grant volume permission.
   // so here , we are using a while() to do that.
   private val perm_vol = new Work() {
-    def perform(cur:FlowPoint, job:Scope, arg:Any) = {
+    def perform(cur:FlowPoint, job:Job, arg:Any) = {
       job.getv("vol_count") match {
         case n:Int if (n==2) =>
           println("Step(3'): Granted permission for user to access/snapshot this volume(id).\n")
@@ -140,7 +140,7 @@ class Demo extends PipelineDelegate {
 
   private val prov_vol = new While( new PTask(perm_vol),
     new BoolExpr() {
-      def evaluate(j:Scope) = {
+      def evaluate(j:Job) = {
         var c=0
         j.getv( "vol_count") match {
           case n:Int =>
@@ -157,7 +157,7 @@ class Demo extends PipelineDelegate {
   // where the db write fails a couple of times.
   // so again , we are using a while() to do that.
   private val write_db = new Work {
-    def perform(cur:FlowPoint, job:Scope, arg:Any) = {
+    def perform(cur:FlowPoint, job:Job, arg:Any) = {
       job.getv("wdb_count") match {
         case n:Int if (n==2) =>
           println("Step(4): Wrote stuff to database successfully.\n")
@@ -171,7 +171,7 @@ class Demo extends PipelineDelegate {
 
   private val save_sdb = new While( new PTask(write_db),
     new BoolExpr() {
-      def evaluate(j:Scope) = {
+      def evaluate(j:Job) = {
         var c=0
         j.getv("wdb_count") match {
           case n:Int =>
@@ -193,7 +193,7 @@ class Demo extends PipelineDelegate {
   // this is the final step, after all the work are done, reply back to the caller.
   // like, returning a 200-OK.
   private val reply_user = new Work {
-    def perform(cur:FlowPoint, job:Scope, arg:Any) = {
+    def perform(cur:FlowPoint, job:Job, arg:Any) = {
       println("Step(5): We'd probably return a 200 OK back to caller here.\n")
       null
     }
@@ -202,7 +202,7 @@ class Demo extends PipelineDelegate {
   private val ReplyUser = new PTask(reply_user)
 
   private val error_user = new Work {
-    def perform(cur:FlowPoint, job:Scope, arg:Any) = {
+    def perform(cur:FlowPoint, job:Job, arg:Any) = {
       println("Step(5): We'd probably return a 200 OK but with errors.\n")
       null
     }
@@ -214,7 +214,7 @@ class Demo extends PipelineDelegate {
   // do a final test to see what sort of response should we send back to the user.
   private val FinalTest = new If( ReplyUser, ErrorUser,
     new BoolExpr() {
-      def evaluate(j:Scope ) = {
+      def evaluate(j:Job ) = {
         // we hard code that all things are well.
         true
       }

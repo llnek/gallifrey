@@ -19,7 +19,7 @@
 package demo.steps
 
 
-import com.zotoh.wflow.core.Scope
+import com.zotoh.wflow.core.Job
 import com.zotoh.wflow._
 
 object Auth {
@@ -36,25 +36,25 @@ object Auth {
   }
 
   private val facebook_login = new Work {
-    def perform(cur:FlowPoint, job:Scope, arg:Any) = {
+    def perform(cur:FlowPoint, job:Job, arg:Any) = {
       println("-> using facebook to login.\n")
     }
   }
 
   private val gplus_login = new Work {
-    def perform(cur:FlowPoint, job:Scope, arg:Any) = {
+    def perform(cur:FlowPoint, job:Job, arg:Any) = {
       println("-> using google+ to login.\n")
     }
   }
 
   private val openid_login = new Work {
-    def perform(cur:FlowPoint, job:Scope, arg:Any) = {
+    def perform(cur:FlowPoint, job:Job, arg:Any) = {
       println("-> using open-id to login.\n")
     }
   }
 
   private val db_login = new Work {
-    def perform(cur:FlowPoint, job:Scope, arg:Any) = {
+    def perform(cur:FlowPoint, job:Job, arg:Any) = {
       println("-> using internal db to login.\n")
     }
   }

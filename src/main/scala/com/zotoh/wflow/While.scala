@@ -19,7 +19,7 @@
 
 package com.zotoh.wflow
 
-import com.zotoh.wflow.core.Scope
+import com.zotoh.wflow.core.Job
 
 /**
  * @author kenl
@@ -29,7 +29,7 @@ class While(private var _body:Activity,e:BoolExpr) extends Conditional(e) {
 
   def this(body:Activity) {
     this(body, new BoolExpr{
-      def evaluate(j:Scope) = false
+      def evaluate(j:Job) = false
     })
   }
 

@@ -19,7 +19,7 @@
 
 package com.zotoh.wflow
 
-import com.zotoh.wflow.core.Scope
+import com.zotoh.wflow.core.Job
 
 /**
  * A For is treated sort of like a while with the test-condition being (i &lt; upperlimit).
@@ -50,7 +50,7 @@ class ForLoopExpr(
   private var _started=false
   private var _loop=0
 
-  def evaluate(j:Scope ) = {
+  def evaluate(j:Job ) = {
     try {
       if (!_started) {
         _loop=_cnt.getCount(j)

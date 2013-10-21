@@ -21,7 +21,7 @@ package demo.fork
 import com.zotoh.gallifrey.runtime.AppMain
 import com.zotoh.gallifrey.core.Container
 
-import com.zotoh.wflow.core.Scope
+import com.zotoh.wflow.core.Job
 import com.zotoh.wflow._
 import org.json.JSONObject
 
@@ -60,7 +60,7 @@ class Demo extends PipelineDelegate {
     // parent continues;
 
   def getStartActivity(pipe:Pipeline) = new PTask( new Work() {
-    def perform(cur:FlowPoint, job:Scope, arg:Any) = {
+    def perform(cur:FlowPoint, job:Job, arg:Any) = {
       println("I am the *Parent*")
       println("I am programmed to fork off a parallel child process, and continue my business.")
       null
@@ -68,12 +68,12 @@ class Demo extends PipelineDelegate {
   }).
   chain( new Split().
     addSplit(new PTask(new Work() {
-        def perform(cur:FlowPoint, job:Scope, arg:Any) = {
+        def perform(cur:FlowPoint, job:Job, arg:Any) = {
           println("*Child*: will create my own child (blocking)")
           job.setv("rhs", 60)
           job.setv("lhs", 5)
           val p2= new PTask( new Work() {
-            def perform(cur:FlowPoint, job:Scope, arg:Any) = {
+            def perform(cur:FlowPoint, job:Job, arg:Any) = {
               println("*Child*: the result for (5 * 60) according to my own child is = "  +
                           job.getv("result"))
               println("*Child*: done.")
@@ -81,7 +81,7 @@ class Demo extends PipelineDelegate {
           })
                   // split & wait
           new Split( new And(p2)).addSplit(new PTask(new Work() {
-            def perform(cur:FlowPoint, job:Scope, arg:Any) = {
+            def perform(cur:FlowPoint, job:Job, arg:Any) = {
               println("*Child->child*: taking some time to do this task... ( ~ 6secs)")
               for (i <- 1 to 6) {
                 Thread.sleep(1000)
@@ -98,7 +98,7 @@ class Demo extends PipelineDelegate {
         }
       }) )).
     chain(new PTask( new Work() {
-        def perform(cur:FlowPoint, job:Scope, arg:Any) = {
+        def perform(cur:FlowPoint, job:Job, arg:Any) = {
           println("*Parent*: after fork, continue to calculate fib(6)...")
           val b=new StringBuilder("*Parent*: ")
           for (i <- 1 to 6) {

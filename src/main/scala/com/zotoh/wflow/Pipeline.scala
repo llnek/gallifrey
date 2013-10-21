@@ -23,7 +23,7 @@ import com.zotoh.frwk.util.CoreUtils._
 import org.slf4j._
 import com.zotoh.frwk.util.Schedulable
 import java.util.concurrent.atomic.AtomicLong
-import com.zotoh.wflow.core.Scope
+import com.zotoh.wflow.core.Job
 import com.zotoh.frwk.core.Startable
 import com.zotoh.frwk.server.ServerLike
 
@@ -47,7 +47,7 @@ object Pipeline {
  * @author kenl
  *
  */
-class Pipeline (private val _theScope:Scope, private val _delegateClass:String) extends Startable {
+class Pipeline (private val _theScope:Job, private val _delegateClass:String) extends Startable {
 
   private val _log:Logger= LoggerFactory.getLogger(classOf[Pipeline] )
   def tlog() = _log

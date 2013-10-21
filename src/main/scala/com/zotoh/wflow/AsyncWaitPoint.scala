@@ -19,7 +19,7 @@
 
 package com.zotoh.wflow
 
-import com.zotoh.wflow.core.Scope
+import com.zotoh.wflow.core.Job
 
 
 /**
@@ -28,6 +28,6 @@ import com.zotoh.wflow.core.Scope
  */
 class AsyncWaitPoint protected[wflow](cur:FlowPoint,a:AsyncWait) extends FlowPoint(cur,a) {
 
-  override def eval(j:Scope ) = this
+  override def eval(j:Job ) = this
 
 }

@@ -21,7 +21,7 @@ package com.zotoh.wflow
 
 import org.slf4j._
 import java.util.concurrent.atomic.AtomicLong
-import com.zotoh.wflow.core.Scope
+import com.zotoh.wflow.core.Job
 import com.zotoh.frwk.server.ServerLike
 import com.zotoh.frwk.util.RunnableWithId
 
@@ -55,7 +55,7 @@ abstract class FlowPoint protected[wflow](protected val _parent:Pipeline) extend
     _defn=a
   }
 
-  def eval(j:Scope ):FlowPoint
+  def eval(j:Job ):FlowPoint
 
   def getId() = _pid
 

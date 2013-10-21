@@ -26,7 +26,7 @@ import com.zotoh.gallifrey.runtime.AppMain
 import com.zotoh.gallifrey.core.Container
 import com.zotoh.gallifrey.io.{SocketEvent, TimerEvent}
 
-import com.zotoh.wflow.core.Scope
+import com.zotoh.wflow.core.Job
 import com.zotoh.wflow._
 import org.json.JSONObject
 
@@ -59,7 +59,7 @@ class Demo extends PipelineDelegate {
   private var _clientMsg=""
 
   val task1= new Work() {
-      def perform(cur:FlowPoint, job:Scope, arg:Any) = {
+      def perform(cur:FlowPoint, job:Job, arg:Any) = {
 
           val ev= job.event.asInstanceOf[SocketEvent]
           val sockBin = { (ev:SocketEvent)  =>
@@ -76,7 +76,7 @@ class Demo extends PipelineDelegate {
   }
 
   val task2= new Work() {
-      def perform(cur:FlowPoint, job:Scope, arg:Any) = {
+      def perform(cur:FlowPoint, job:Job, arg:Any) = {
         println("Socket Server Received: " + _clientMsg )
         null
       }

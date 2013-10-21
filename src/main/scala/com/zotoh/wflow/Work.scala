@@ -19,14 +19,14 @@
 
 package com.zotoh.wflow
 
-import com.zotoh.wflow.core.Scope
+import com.zotoh.wflow.core.Job
 
 /**
  * @author kenl
  *
  */
 trait Work {
-  def perform(cur:FlowPoint, job:Scope, arg:Any) : Any
+  def perform(cur:FlowPoint, job:Job, arg:Any) : Any
 }
 
 

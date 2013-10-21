@@ -21,7 +21,7 @@ package com.zotoh.wflow
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable
-import com.zotoh.wflow.core.Scope
+import com.zotoh.wflow.core.Job
 
 /**
  * @author kenl
@@ -52,7 +52,7 @@ class SwitchPoint(s:FlowPoint , a:Activity ) extends FlowPoint(s,a) {
 
   def defn() = _def
 
-  def eval(j:Scope ) = {
+  def eval(j:Job ) = {
     val c= popClosureArg()
     var a:FlowPoint = _expr.getChoice(j) match {
       case m if m != null => _cs.get(m).getOrElse(null)

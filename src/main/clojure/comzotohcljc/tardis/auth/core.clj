@@ -18,8 +18,7 @@
 (ns ^{ :doc ""
        :author "kenl" }
 
-  comzotohcljc.tardis.auth.core
-  (:gen-class))
+  comzotohcljc.tardis.auth.core )
 
 (use '[clojure.tools.logging :only [info warn error debug] ])
 
@@ -43,9 +42,10 @@
 (import '(org.apache.shiro.subject Subject))
 
 (import '( com.zotoh.wflow
+  If BoolExpr
   FlowPoint Activity Pipeline PipelineDelegate PTask Work))
 (import '(com.zotoh.gallifrey.io HTTPEvent HTTPResult))
-(import '(com.zotoh.wflow.core Scope))
+(import '(com.zotoh.wflow.core Job))
 
 
 (use '[comzotohcljc.util.core :only [notnil? stringify make-mmap uid load-javaprops] ])
@@ -54,6 +54,7 @@
 (use '[comzotohcljc.net.comms :only [getFormFields] ])
 
 (use '[comzotohcljc.tardis.core.constants])
+(use '[comzotohcljc.tardis.core.wfs])
 (use '[comzotohcljc.tardis.io.http :only [scanBasicAuth] ])
 (use '[comzotohcljc.tardis.auth.dms])
 (use '[comzotohcljc.dbio.connect :only [dbio-connect] ])
@@ -163,19 +164,21 @@
   ))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Work Flow
+;;
 
-(defn make-loginTask "" []
-  (PTask. (reify Work
-    (perform [_ fw scope arg]
-      (let [ ^comzotohcljc.tardis.core.sys.Element ctr (.container ^Scope scope)
+(defn- TEST-LOGIN ^BoolExpr []
+  (DefBoolExpr
+    (evaluate [_ job]
+      (let [ ^comzotohcljc.tardis.core.sys.Element ctr (.container ^Job job)
              ^comzotohcljc.tardis.auth.core.AuthPlugin
              pa (:auth (.getAttr ctr K_PLUGINS))
-             ^HTTPEvent evt (.event ^Scope scope)
+             ^HTTPEvent evt (.event ^Job job)
              ba (scanBasicAuth evt)
              data (.data evt)
              ^comzotohcljc.netty.ios.WebSession ss (.getSession evt) ]
         (when (nil? pa) (throw (PluginError. "AuthPlugin missing.")))
-        (with-local-vars [user "" pwd ""]
+        (with-local-vars [user nil pwd nil]
           (cond
             (instance? ULFormItems data)
             (doseq [ ^ULFileItem x (getFormFields data) ]
@@ -190,40 +193,36 @@
               (var-set user (first ba))
               (var-set pwd (last ba)))
 
-            (and (hgl? (.getParameterValue evt LF-PASSWORD))
-                 (hgl? (.getParameterValue evt LF-USER)))
+            :else
             (do
               (var-set pwd (.getParameterValue evt LF-PASSWORD))
-              (var-set user (.getParameterValue evt LF-USER)))
+              (var-set user (.getParameterValue evt LF-USER))) )
 
-            :else
-            nil)
-
-          (if (and (hgl? @user)
-                   (hgl? @pwd))
+          (try
             (let [ acct (.getAccount pa @user @pwd)
                    rs (.getRoles pa acct) ]
               (.setAttribute ss LF-PASSWORD @pwd)
               (.setAttribute ss LF-USER @user)
+              (.setAttribute ss "account" acct)
               (.setAttribute ss "roles" rs))
-            (throw (AuthError. "Unknown user or bad password."))))
+            true
+            (catch Throwable e#
+              (error e# "")
+              false)))
+        ))))
 
-        )))))
+(defn- LOGIN-ERROR ^PTask []
+  (DefWFTask
+    (perform [_ fw job arg]
+             )))
 
-(defn make-verifyAcctTask "" []
-  (PTask. (reify Work
-    (perform [_ fw scope arg]
-      (let [ ^comzotohcljc.tardis.core.sys.Element ctr (.container ^Scope scope)
-             ^comzotohcljc.tardis.auth.core.AuthPlugin
-             pa (:auth (.getAttr ctr K_PLUGINS))
-             ^HTTPEvent evt (.event ^Scope scope)
-             ^comzotohcljc.netty.ios.WebSession ss (.getSession evt)
-             ^String user (.getAttribute ss WS_USER)
-             ^String pwd (.getAttribute ss WS_CRED) ]
-      (when (nil? pa) (throw (PluginError. "AuthPlugin missing.")))
-      (let [ acct (.getAccount pa user pwd)
-             rs (.getRoles pa acct) ]
-        ))))))
+(defn- LOGIN-OK ^PTask []
+  (DefWFTask
+    (perform [_ fw job arg]
+             )))
+
+(defn makeLoginPipeline "" []
+  (If. LOGIN-OK LOGIN-ERROR TEST-LOGIN))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

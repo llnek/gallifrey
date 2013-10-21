@@ -398,7 +398,7 @@
 
       (getParameterValue [_ nm] (.getParameter req nm))
       (hasParameter [_ nm]
-        (.contains (.getParameters req) nm))
+        (.containsKey (.getParameterMap req) nm))
 
       (getParameterValues [_ nm]
         (let [ rc (ArrayList.) ]

@@ -25,7 +25,7 @@ import org.apache.commons.io.{FileUtils=>FUT}
 import com.zotoh.gallifrey.io.FileEvent
 
 
-import com.zotoh.wflow.core.Scope
+import com.zotoh.wflow.core.Job
 import com.zotoh.wflow._
 
 
@@ -38,7 +38,7 @@ import com.zotoh.wflow._
 class Demo extends PipelineDelegate    {
 
   def getStartActivity(pipe:Pipeline) = new PTask(new Work() {
-    def perform(cur:FlowPoint, job:Scope, arg:Any) = {
+    def perform(cur:FlowPoint, job:Job, arg:Any) = {
       val ev= job.event().asInstanceOf[FileEvent]
       val f=ev.getFile()
       println("Picked up new file: " + f)

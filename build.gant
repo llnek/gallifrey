@@ -591,9 +591,9 @@ def compile_clj() {
   clj_JMX()
   clj_DBIO()
   cljhhh_IO()
-  cljhhh_MVC()
   cljhhh_Core()
   cljhhh_Auth()
+  cljhhh_MVC()
   cljhhh_Main()
 
   copy (todir: "${buildDir}") {
@@ -836,6 +836,7 @@ def cljhhh_Core() {
     arg (value: 'comzotohcljc.tardis.core.constants')
     arg (value: 'comzotohcljc.tardis.core.climain')
     arg (value: 'comzotohcljc.tardis.core.sys')
+    arg (value: 'comzotohcljc.tardis.core.wfs')
     arg (value: 'comzotohcljc.tardis.etc.cmdline')
     arg (value: 'comzotohcljc.tardis.etc.task')
     arg (value: 'comzotohcljc.tardis.etc.cli')

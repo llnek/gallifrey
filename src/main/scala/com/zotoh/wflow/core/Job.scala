@@ -25,7 +25,7 @@ import com.zotoh.frwk.core.{Gettable, Settable}
 /**
  * @author kenl
  */
-trait Scope extends Gettable with Settable {
+trait Job extends Gettable with Settable {
   def container() : ServerLike
   def event() : Event
   def id() : Any

@@ -19,7 +19,7 @@
 
 package com.zotoh.wflow
 
-import com.zotoh.wflow.core.Scope
+import com.zotoh.wflow.core.Job
 import com.zotoh.frwk.server.ServerLike
 
 /**
@@ -30,7 +30,7 @@ class SplitPoint(s:FlowPoint, a:Split) extends CompositePoint(s,a) {
 
   private var _fallThru=false
 
-  def eval(j:Scope ) = {
+  def eval(j:Job ) = {
     val core = flow().container() match {
       case x:ServerLike => x.core()
       case _ => null

@@ -23,7 +23,7 @@ import com.zotoh.gallifrey.core.Container
 import org.json.JSONObject
 import com.zotoh.wflow._
 import scala.Some
-import com.zotoh.wflow.core.Scope
+import com.zotoh.wflow.core.Job
 
 
 /**
@@ -48,7 +48,7 @@ class DemoMain extends AppMain {
 class Demo extends PipelineDelegate {
 
   def getStartActivity(pipe:Pipeline) = new PTask( new Work() {
-    def perform(cur:FlowPoint, job:Scope, arg:Any) = {
+    def perform(cur:FlowPoint, job:Job, arg:Any) = {
       val t= new AsyncResumeToken( cur )
       println("/* Calling a mock-webservice which takes a long time (10secs),")
       println("- since the call is *async*, event loop is not blocked.")
@@ -76,7 +76,7 @@ class Demo extends PipelineDelegate {
       new AsyncWait()
     }
   }).chain( new PTask(new Work() {
-    def perform(cur:FlowPoint, job:Scope, arg:Any) = {
+    def perform(cur:FlowPoint, job:Job, arg:Any) = {
       println("-> The result from WS is: " + arg)
       null
     }

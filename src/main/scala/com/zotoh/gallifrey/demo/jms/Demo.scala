@@ -23,7 +23,7 @@ import javax.jms.{TextMessage,Message}
 import com.zotoh.gallifrey.core.Container
 import com.zotoh.gallifrey.io.JMSEvent
 
-import com.zotoh.wflow.core.Scope
+import com.zotoh.wflow.core.Job
 import com.zotoh.wflow._
 import com.zotoh.gallifrey.runtime.AppMain
 import org.json.JSONObject
@@ -60,7 +60,7 @@ class Demo() extends PipelineDelegate {
   import Demo._
 
   def getStartActivity(pipe:Pipeline) = new PTask( new Work() {
-    def perform(cur:FlowPoint, job:Scope, arg:Any) = {
+    def perform(cur:FlowPoint, job:Job, arg:Any) = {
       val ev= job.event().asInstanceOf[JMSEvent]
       val msg= ev.getMsg()
       println("-> Correlation ID= " + msg.getJMSCorrelationID())

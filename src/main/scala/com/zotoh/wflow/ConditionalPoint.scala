@@ -19,7 +19,7 @@
 
 package com.zotoh.wflow
 
-import com.zotoh.wflow.core.Scope
+import com.zotoh.wflow.core.Job
 
 
 /**
@@ -35,6 +35,6 @@ abstract class ConditionalPoint protected[wflow](s:FlowPoint, a:Conditional) ext
     this
   }
 
-  protected def test(j:Scope ) = _expr.evaluate(j)
+  protected def test(j:Job ) = _expr.evaluate(j)
 
 }
