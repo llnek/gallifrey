@@ -24,12 +24,13 @@ package com.zotoh.wflow
  *
  */
 class If(
+  expr:BoolExpr,
   private val _thenCode:Activity,
-  private val _elseCode:Activity,
-  expr:BoolExpr) extends Conditional(expr) {
+  private val _elseCode:Activity
+ ) extends Conditional(expr) {
 
-  def this(thenCode:Activity,expr:BoolExpr ) {
-    this(thenCode, null, expr)
+  def this(expr:BoolExpr ,thenCode:Activity) {
+    this(expr, thenCode, null )
   }
 
   def reifyPoint(cur:FlowPoint ) = new IfPoint(cur,this)

@@ -20,7 +20,8 @@
 package com.zotoh.gallifrey.io;
 
 
-abstract interface IOResult {
+public interface IOResult {
+  public Object emitter();
 }
 
 

@@ -212,13 +212,13 @@ class Demo extends PipelineDelegate {
 
 
   // do a final test to see what sort of response should we send back to the user.
-  private val FinalTest = new If( ReplyUser, ErrorUser,
+  private val FinalTest = new If( 
     new BoolExpr() {
       def evaluate(j:Job ) = {
         // we hard code that all things are well.
         true
       }
-    })
+    }, ReplyUser, ErrorUser )
 
   // returning the 1st step of the workflow.
   def getStartActivity(pipe:Pipeline) =

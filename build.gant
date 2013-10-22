@@ -812,7 +812,6 @@ def cljhhh_IO() {
     sysproperty (key: 'clojure.compile.path', value: "${buildDir}")
     arg (value: 'comzotohcljc.tardis.io.context')
     arg (value: 'comzotohcljc.tardis.io.core')
-    //arg (value: 'comzotohcljc.tardis.io.events')
     arg (value: 'comzotohcljc.tardis.io.socket')
     arg (value: 'comzotohcljc.tardis.io.files')
     arg (value: 'comzotohcljc.tardis.io.http')
@@ -822,6 +821,7 @@ def cljhhh_IO() {
     arg (value: 'comzotohcljc.tardis.io.netty')
     arg (value: 'comzotohcljc.tardis.io.servlet')
     arg (value: 'comzotohcljc.tardis.io.triggers')
+    arg (value: 'comzotohcljc.tardis.io.ios')
   }
 }
 

@@ -130,8 +130,11 @@
 
 (def K_META :meta )
 
-(def WS_CRED "credential")
-(def WS_USER "principal")
+(def JS_CRED "credential")
+(def JS_USER "principal")
+
+(def JS_LASTRESULT "____lastresult")
+(def JS_LASTERROR "____lasterror")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

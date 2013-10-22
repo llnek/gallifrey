@@ -48,7 +48,9 @@
 (import '(com.zotoh.wflow.core Job))
 
 
-(use '[comzotohcljc.util.core :only [notnil? stringify make-mmap uid load-javaprops] ])
+(use '[comzotohcljc.util.core :only [notnil? stringify
+                                     make-mmap uid
+                                     test-nonil load-javaprops] ])
 (use '[comzotohcljc.crypto.codec :only [pwdify] ])
 (use '[comzotohcljc.util.str :only [nsb hgl? strim] ])
 (use '[comzotohcljc.net.comms :only [getFormFields] ])
@@ -175,10 +177,9 @@
              pa (:auth (.getAttr ctr K_PLUGINS))
              ^HTTPEvent evt (.event ^Job job)
              ba (scanBasicAuth evt)
-             data (.data evt)
-             ^comzotohcljc.netty.ios.WebSession ss (.getSession evt) ]
-        (when (nil? pa) (throw (PluginError. "AuthPlugin missing.")))
-        (with-local-vars [user nil pwd nil]
+             data (.data evt) ]
+        (test-nonil "AuthPlugin" pa)
+        (with-local-vars [user nil pwd nil acct nil]
           (cond
             (instance? ULFormItems data)
             (doseq [ ^ULFileItem x (getFormFields data) ]
@@ -199,16 +200,19 @@
               (var-set user (.getParameterValue evt LF-USER))) )
 
           (try
-            (let [ acct (.getAccount pa @user @pwd)
-                   rs (.getRoles pa acct) ]
-              (.setAttribute ss LF-PASSWORD @pwd)
-              (.setAttribute ss LF-USER @user)
-              (.setAttribute ss "account" acct)
-              (.setAttribute ss "roles" rs))
-            true
-            (catch Throwable e#
-              (error e# "")
-              false)))
+            (let [acct (.getAccount pa @user @pwd)
+                  rs (.getRoles pa acct)
+                  ^comzotohcljc.tardis.io.ios.WebSession
+                  ss (.getSession evt) ]
+              (doto ss
+                (.setAttribute "user.account" acct)
+                (.setAttribute "user.id" @user)
+                (.setAttribute "user.pwd" @pwd)
+                (.setAttribute "user.roles" rs))
+              true)
+            (catch AuthError e# false)
+            (catch Throwable t# (error t# "") false)))
+
         ))))
 
 (defn- LOGIN-ERROR ^PTask []
@@ -217,12 +221,16 @@
              )))
 
 (defn- LOGIN-OK ^PTask []
-  (DefWFTask
-    (perform [_ fw job arg]
-             )))
+  (DefWFTask (perform [_ fw job arg]
+    (let [^HTTPEvent evt (.event ^Job job)
+          ^comzotohcljc.tardis.io.ios.WebSession ss (.getSession evt) ]
+
+
+
+             ))))
 
 (defn makeLoginPipeline "" []
-  (If. LOGIN-OK LOGIN-ERROR TEST-LOGIN))
+  (If. TEST-LOGIN LOGIN-OK LOGIN-ERROR))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

@@ -24,6 +24,7 @@ package com.zotoh.frwk.core
 trait Settable {
 
   def setv(key:Any, p:Any): Unit
+  def unsetv(key:Any): Unit
 
 }
 

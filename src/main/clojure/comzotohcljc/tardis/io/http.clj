@@ -274,7 +274,7 @@
           (.stop svr) ))
     (ioes-stopped co)))
 
-(defn make-http-result []
+(defn make-http-result [co]
   (let [ impl (make-mmap) ]
     (.mm-s impl :version "HTTP/1.1" )
     (.mm-s impl :code -1)
@@ -295,6 +295,7 @@
 
       (setProtocolVersion [_ ver]  (.mm-s impl :version ver))
       (setStatus [_ code] (.mm-s impl :code code))
+      (emitter [_] co)
       (addCookie [_ c]
         (let [ ^List a (.mm-g impl :cookies) ]
           (when-not (nil? c)
@@ -344,8 +345,8 @@
 
 (defmethod ioes-reify-event :czc.tardis.io/JettyIO
   [co & args]
-  (let [ ^HttpServletRequest req (first args)
-         ^HTTPResult result (make-http-result)
+  (let [ ^HTTPResult result (make-http-result co)
+         ^HttpServletRequest req (first args)
          impl (make-mmap)
          eid (next-long) ]
     (reify
