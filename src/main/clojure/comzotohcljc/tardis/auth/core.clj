@@ -25,10 +25,10 @@
 (import '(com.zotoh.gallifrey.runtime AuthError UnknownUser))
 (import '(com.zotoh.gallifrey.etc
   PluginFactory Plugin PluginError))
-(import '(com.zotoh.gallifrey.core Container))
-(import '(org.apache.commons.codec.binary Base64))
 
 (import '(com.zotoh.frwk.net ULFormItems ULFileItem))
+(import '(org.apache.commons.codec.binary Base64))
+(import '(com.zotoh.gallifrey.core Container))
 
 (import '(com.zotoh.frwk.dbio
   DBAPI MetaCache SQLr JDBCPool JDBCInfo))
@@ -57,16 +57,13 @@
 
 (use '[comzotohcljc.tardis.core.constants])
 (use '[comzotohcljc.tardis.core.wfs])
-(use '[comzotohcljc.tardis.io.http :only [scanBasicAuth] ])
+(use '[comzotohcljc.tardis.io.ios :only [getLoginInfo refashion] ])
 (use '[comzotohcljc.tardis.auth.dms])
 (use '[comzotohcljc.dbio.connect :only [dbio-connect] ])
 (use '[comzotohcljc.dbio.core])
 (require '[clojure.data.json :as json])
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(def LF-PASSWORD "password")
-(def LF-USER "user")
 
 (defprotocol AuthPlugin
   ""
@@ -172,46 +169,19 @@
 (defn- TEST-LOGIN ^BoolExpr []
   (DefBoolExpr
     (evaluate [_ job]
-      (let [ ^comzotohcljc.tardis.core.sys.Element ctr (.container ^Job job)
-             ^comzotohcljc.tardis.auth.core.AuthPlugin
-             pa (:auth (.getAttr ctr K_PLUGINS))
-             ^HTTPEvent evt (.event ^Job job)
-             ba (scanBasicAuth evt)
-             data (.data evt) ]
+      (let [^comzotohcljc.tardis.core.sys.Element ctr (.container ^Job job)
+            ^comzotohcljc.tardis.auth.core.AuthPlugin
+            pa (:auth (.getAttr ctr K_PLUGINS))
+            ^HTTPEvent evt (.event ^Job job)
+            info (getLoginInfo evt) ]
         (test-nonil "AuthPlugin" pa)
-        (with-local-vars [user nil pwd nil acct nil]
-          (cond
-            (instance? ULFormItems data)
-            (doseq [ ^ULFileItem x (getFormFields data) ]
-              (debug "Form field: " (.getFieldName x) " = " (.getString x))
-              (case (.getFieldName x)
-                "password" (var-set pwd  (.getString x))
-                "user" (var-set user (.getString x))
-                nil))
-
-            (notnil? ba)
-            (do
-              (var-set user (first ba))
-              (var-set pwd (last ba)))
-
-            :else
-            (do
-              (var-set pwd (.getParameterValue evt LF-PASSWORD))
-              (var-set user (.getParameterValue evt LF-USER))) )
-
-          (try
-            (let [acct (.getAccount pa @user @pwd)
-                  rs (.getRoles pa acct)
-                  ^comzotohcljc.tardis.io.ios.WebSession
-                  ss (.getSession evt) ]
-              (doto ss
-                (.setAttribute "user.account" acct)
-                (.setAttribute "user.id" @user)
-                (.setAttribute "user.pwd" @pwd)
-                (.setAttribute "user.roles" rs))
-              true)
-            (catch AuthError e# false)
-            (catch Throwable t# (error t# "") false)))
+        (try
+          (let [ acct (.getAccount pa (:principal info) (:credential info))
+                 rs (.getRoles pa acct) ]
+            (refashion evt acct rs)
+            true)
+          (catch AuthError e# false)
+          (catch Throwable t# (error t# "") false))
 
         ))))
 
