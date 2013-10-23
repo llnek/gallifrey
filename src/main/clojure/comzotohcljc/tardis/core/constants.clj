@@ -130,11 +130,10 @@
 
 (def K_META :meta )
 
+(def JS_LAST "____lastresult")
 (def JS_CRED "credential")
 (def JS_USER "principal")
 
-(def JS_LASTRESULT "____lastresult")
-(def JS_LASTERROR "____lasterror")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

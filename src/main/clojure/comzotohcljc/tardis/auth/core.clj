@@ -57,7 +57,7 @@
 
 (use '[comzotohcljc.tardis.core.constants])
 (use '[comzotohcljc.tardis.core.wfs])
-(use '[comzotohcljc.tardis.io.ios :only [getLoginInfo refashion] ])
+(use '[comzotohcljc.tardis.io.ios :only [getSignupInfo getLoginInfo refashion] ])
 (use '[comzotohcljc.tardis.auth.dms])
 (use '[comzotohcljc.dbio.connect :only [dbio-connect] ])
 (use '[comzotohcljc.dbio.core])
@@ -68,7 +68,19 @@
 (defprotocol AuthPlugin
   ""
   (getRoles [_ acctObj ] )
-  (getAccount [_ user pwdObj]))
+  (addAccount [_ options] )
+  (getAccount [_ options]))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn- mkjdbc ^JDBCInfo [^comzotohcljc.util.core.MutableMapAPI impl]
+  (let [ pkey (.mm-g impl :appKey)
+         cfg (get (.mm-g impl :cfg) (keyword "_")) ]
+    (make-jdbc "_" cfg (pwdify (:passwd cfg) pkey))))
+
+(defn- getSQLr ^SQLr [^comzotohcljc.util.core.MutableMapAPI impl]
+  (-> (dbio-connect (mkjdbc impl) AUTH-MCACHE {})
+      (.newSimpleSQLr)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -92,11 +104,14 @@
 
 (defn create-loginAccount  "" [^SQLr sql
                                ^String user
-                               ^comzotohcljc.crypto.codec.Password pwdObj roleObjs]
+                               ^comzotohcljc.crypto.codec.Password pwdObj
+                               options
+                               roleObjs]
   (let [ [p s] (.hashed pwdObj)
          acc (.insert sql (-> (dbio-create-obj :czc.tardis.auth/LoginAccount)
                             (dbio-set-fld :acctid (strim user))
-                            (dbio-set-fld :salt s)
+                            (dbio-set-fld :email options)
+                            ;;(dbio-set-fld :salt s)
                             (dbio-set-fld :passwd  p))) ]
     (doseq [ r (seq roleObjs) ]
       (dbio-set-m2m { :as :roles :with sql } acc r))
@@ -116,6 +131,10 @@
 
       :else
       (throw (AuthError. "Incorrect password"))) ))
+
+(defn has-loginAccount  "" [^SQLr sql ^String user]
+  (notnil? (.findOne sql :czc.tardis.auth/LoginAccount
+                        { :acctid (strim user) } )))
 
 (defn change-loginAccount "" [^SQLr sql
                               userObj
@@ -166,8 +185,30 @@
 ;; Work Flow
 ;;
 
-(defn- TEST-LOGIN ^BoolExpr []
-  (DefBoolExpr
+(defn maybeSignupTest ^BoolExpr []
+  (DefPredicate
+    (evaluate [_ job]
+      (let [^comzotohcljc.tardis.core.sys.Element ctr (.container ^Job job)
+            ^comzotohcljc.tardis.auth.core.AuthPlugin
+            pa (:auth (.getAttr ctr K_PLUGINS))
+            ^HTTPEvent evt (.event ^Job job)
+            info (getSignupInfo evt) ]
+        (test-nonil "AuthPlugin" pa)
+        (with-local-vars [ uid (:email info) ]
+          (try
+            (when (hgl? (:user info))
+              (var-set uid (:user info)))
+            (.setLastResult job { :account
+              (.addAccount pa (merge info { :principal @uid } )) })
+            true
+            (catch Throwable t#
+              (error t# "")
+              (.setLastResult job { :error t# } )
+              false)))
+        ))))
+
+(defn maybeLoginTest ^BoolExpr []
+  (DefPredicate
     (evaluate [_ job]
       (let [^comzotohcljc.tardis.core.sys.Element ctr (.container ^Job job)
             ^comzotohcljc.tardis.auth.core.AuthPlugin
@@ -176,12 +217,14 @@
             info (getLoginInfo evt) ]
         (test-nonil "AuthPlugin" pa)
         (try
-          (let [ acct (.getAccount pa (:principal info) (:credential info))
+          (let [ acct (.getAccount pa info)
                  rs (.getRoles pa acct) ]
             (refashion evt acct rs)
             true)
-          (catch AuthError e# false)
-          (catch Throwable t# (error t# "") false))
+          (catch Throwable t#
+            (error t# "")
+            (.setLastResult job { :error t# })
+            false))
 
         ))))
 
@@ -199,15 +242,7 @@
 
              ))))
 
-(defn makeLoginPipeline "" []
-  (If. TEST-LOGIN LOGIN-OK LOGIN-ERROR))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defn- mkjdbc ^JDBCInfo [^comzotohcljc.util.core.MutableMapAPI impl]
-  (let [ pkey (.mm-g impl :appKey)
-         cfg (get (.mm-g impl :cfg) (keyword "_")) ]
-    (make-jdbc "_" cfg (pwdify (:passwd cfg) pkey))))
 
 (defn- makeAuthPlugin ""
   ^Plugin
@@ -234,11 +269,19 @@
         (info "AuthPlugin disposed."))
 
       AuthPlugin
-      (getAccount [_ user pwd]
+      (addAccount [_ options]
         (let [ pkey (.mm-g impl :appKey)
-               ^SQLr sql (-> (dbio-connect (mkjdbc impl) AUTH-MCACHE {})
-                             (.newSimpleSQLr)) ]
-          (get-loginAccount sql user (pwdify pwd pkey))))
+               sql (getSQLr impl) ]
+          (create-loginAccount sql
+                               (:principal options)
+                               (pwdify (:credential options) pkey)
+                               [])))
+      (getAccount [_ options]
+        (let [ pkey (.mm-g impl :appKey)
+               sql (getSQLr impl) ]
+          (get-loginAccount sql
+                            (:principal options)
+                            (pwdify (:credential options) pkey))))
       (getRoles [_ acct] [])
 
       )))

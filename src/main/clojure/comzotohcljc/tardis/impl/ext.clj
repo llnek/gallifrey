@@ -104,8 +104,12 @@
         Job
 
         (container [_] _container)
+        (setv [this k v] (.setf! this k v))
         (unsetv [this k] (.clrf! this k))
         (getv [this k] (.getf this k))
+        (setLastResult [this v] (.setf! this JS_LAST v))
+        (getLastResult [this] (.getf this JS_LAST))
+        (clrLastResult [this] (.clrf! this JS_LAST))
         (event [_] evt)
         (id [_] jid))
 

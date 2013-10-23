@@ -66,6 +66,29 @@
   (getLastAccessedTime [_] )
   (getMaxInactiveInterval [_] ))
 
+
+(defn getSignupInfo "" [^HTTPEvent evt]
+  (let [ data (.data evt) ]
+    (with-local-vars [user nil pwd nil email nil]
+      (cond
+        (instance? ULFormItems data)
+        (doseq [ ^ULFileItem x (getFormFields data) ]
+          (debug "Form field: " (.getFieldName x) " = " (.getString x))
+          (case (.getFieldName x)
+            "password" (var-set pwd  (.getString x))
+            "user" (var-set user (.getString x))
+            "email" (var-set email (.getString x))
+            nil))
+
+        :else
+        (do
+          (var-set pwd (.getParameterValue evt "password"))
+          (var-set email (.getParameterValue evt "email"))
+          (var-set user (.getParameterValue evt "user"))) )
+
+      { :principal @user :credential @pwd  :email @email } )))
+
+
 (defn getLoginInfo "" [^HTTPEvent evt]
   (let [ ba (scanBasicAuth evt)
          data (.data evt) ]

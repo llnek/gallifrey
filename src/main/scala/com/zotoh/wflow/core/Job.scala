@@ -29,5 +29,8 @@ trait Job extends Gettable with Settable {
   def container() : ServerLike
   def event() : Event
   def id() : Any
+  def setLastResult(v:Any) : Unit
+  def clrLastResult() : Unit
+  def getLastResult() : Any
 }
 

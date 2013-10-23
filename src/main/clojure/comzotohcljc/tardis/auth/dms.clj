@@ -60,8 +60,8 @@
 (defmodel!  "czc.tardis.auth" LoginAccount
   (with-db-fields
     { :acctid { :null false }
-      :email { :null false }
-      :salt { :size 128 }
+      :email { :size 128 }
+      ;;:salt { :size 128 }
       :passwd { :null false :domain :Password }
      })
   (with-db-assocs

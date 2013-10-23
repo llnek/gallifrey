@@ -30,7 +30,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defmacro DefWFTask [ & exprs ] `(PTask. (reify Work ~@exprs )))
-(defmacro DefBoolExpr [ & exprs ] `(reify BoolExpr ~@exprs))
+(defmacro DefPredicate [ & exprs ] `(reify BoolExpr ~@exprs))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

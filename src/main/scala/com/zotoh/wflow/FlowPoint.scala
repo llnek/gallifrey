@@ -105,6 +105,7 @@ abstract class FlowPoint protected[wflow](protected val _parent:Pipeline) extend
       case x:ServerLike => x.core().dequeue(this)
     }
     try {
+      f.job.clrLastResult()
       rc=eval( f.job )
     } catch {
       case e:Throwable =>
