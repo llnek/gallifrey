@@ -109,8 +109,8 @@
                                roleObjs]
   (let [ [p s] (.hashed pwdObj)
          acc (.insert sql (-> (dbio-create-obj :czc.tardis.auth/LoginAccount)
+                            (dbio-set-fld :email (strim (:email options)))
                             (dbio-set-fld :acctid (strim user))
-                            (dbio-set-fld :email options)
                             ;;(dbio-set-fld :salt s)
                             (dbio-set-fld :passwd  p))) ]
     (doseq [ r (seq roleObjs) ]
@@ -196,8 +196,9 @@
         (test-nonil "AuthPlugin" pa)
         (with-local-vars [ uid (:email info) ]
           (try
-            (when (hgl? (:user info))
-              (var-set uid (:user info)))
+            (when (hgl? (:principal info))
+              (var-set uid (:principal info)))
+            (debug "about to add a user account - " @uid)
             (.setLastResult job { :account
               (.addAccount pa (merge info { :principal @uid } )) })
             true
@@ -216,6 +217,7 @@
             ^HTTPEvent evt (.event ^Job job)
             info (getLoginInfo evt) ]
         (test-nonil "AuthPlugin" pa)
+        (debug "about to login user - " (:principal info))
         (try
           (let [ acct (.getAccount pa info)
                  rs (.getRoles pa acct) ]
@@ -275,6 +277,7 @@
           (create-loginAccount sql
                                (:principal options)
                                (pwdify (:credential options) pkey)
+                               options
                                [])))
       (getAccount [_ options]
         (let [ pkey (.mm-g impl :appKey)

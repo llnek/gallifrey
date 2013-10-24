@@ -134,8 +134,10 @@
                  c0 (.getAttr src :router)
                  c1 (:router options)
                  job (make-job parObj evt) ]
+            (debug "event router = " c1)
+            (debug "io router = " c0)
             (try
-              (let [ p (Pipeline. job (if (hgl? c0) c0 c1))
+              (let [ p (Pipeline. job (if (hgl? c1) c1 c0))
                      q (if (nil? p) (make-OrphanFlow job) p) ]
                 (.start ^Pipeline q))
               (catch Throwable e#
@@ -219,10 +221,10 @@
 
         Container
 
-        (notifyObservers [this evt]
+        (notifyObservers [this evt options]
           (let [ ^comzotohcljc.tardis.impl.ext.JobCreator
                  jc (.getAttr this K_JCTOR) ]
-            (.update jc evt {})))
+            (.update jc evt options)))
         (getAppKey [_] (.appKey ^comzotohcljc.tardis.impl.defaults.PODMeta pod))
         (getAppDir [this] (.getAttr this K_APPDIR))
         (acquireJdbc [this gid] (maybeGetDBAPI this gid))

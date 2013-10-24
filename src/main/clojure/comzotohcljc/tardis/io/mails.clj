@@ -137,7 +137,7 @@
     (doseq [ ^MimeMessage mm (seq msgs) ]
       (try
           (doto mm (.getAllHeaders)(.getContent))
-          (.dispatch co (ioes-reify-event co mm))
+          (.dispatch co (ioes-reify-event co mm) {} )
         (finally
           (when (.getAttr src :deleteMsg)
             (.setFlag mm Flags$Flag/DELETED true)))))) )

@@ -64,7 +64,7 @@
           ^comzotohcljc.tardis.io.core.EmitterAPI  src @(.myState c0) ]
       (.timeoutMillis w wm)
       (.hold src w)
-      (.dispatch src evt))))
+      (.dispatch src evt {}))))
 
 (defn- doASyncSvc [this evt req rsp]
   (let [ c (ContinuationSupport/getContinuation req) ]

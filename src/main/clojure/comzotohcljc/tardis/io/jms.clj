@@ -82,7 +82,7 @@
 
 (defn- onMessage [^comzotohcljc.tardis.io.core.EmitterAPI co msg]
       ;;if (msg!=null) block { () => msg.acknowledge() }
-  (.dispatch co (ioes-reify-event co msg)))
+  (.dispatch co (ioes-reify-event co msg) {} ))
 
 (defmethod comp-configure :czc.tardis.io/JMS
   [^comzotohcljc.tardis.core.sys.Element co cfg]

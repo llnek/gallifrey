@@ -115,7 +115,7 @@
                      ^comzotohcljc.tardis.io.core.EmitterAPI  src this ]
                 (.timeoutMillis w wm)
                 (.hold src w)
-                (.dispatch src evt))) )
+                (.dispatch src evt {}))) )
 
         Disposable
 
@@ -148,9 +148,9 @@
               (debug "emitter holding an event with id: " wid)
               (.put b wid wevt))))
 
-        (dispatch [this ev]
+        (dispatch [this ev options]
           (TryC
-              (.notifyObservers parObj ev) )) )
+              (.notifyObservers parObj ev options) )) )
 
       { :typeid :czc.tardis.io/JettyIO } )))
 

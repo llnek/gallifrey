@@ -29,7 +29,7 @@ import com.zotoh.frwk.dbio.DBAPI
 
 trait Container extends ServerLike with Disposable {
 
-  def notifyObservers(evt:IOEvent ) : Unit
+  def notifyObservers(evt:IOEvent, options:Any ) : Unit
   def getAppKey() : String
   def getAppDir() : File
 

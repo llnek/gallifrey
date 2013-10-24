@@ -47,7 +47,7 @@
 
   (release [_ wevt] )
   (hold [_ wevt] )
-  (dispatch [_ ev] ))
+  (dispatch [_ ev options] ))
 
 (defprotocol WaitEventHolder
   ""
@@ -160,9 +160,9 @@
               (debug "emitter holding an event with id: " wid)
               (.put b wid wevt))))
 
-        (dispatch [_ ev]
+        (dispatch [_ ev options]
           (TryC
-              (.notifyObservers parObj ev) )) )
+              (.notifyObservers parObj ev options) )) )
 
       { :typeid emId } )))
 

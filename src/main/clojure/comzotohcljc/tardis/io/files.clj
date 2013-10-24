@@ -105,7 +105,7 @@
                 f)
               :else nil) ]
     (when-not (nil? cf)
-      (.dispatch src (ioes-reify-event co fname cf action)))) )
+      (.dispatch src (ioes-reify-event co fname cf action) {} ))) )
 
 
 (defmethod comp-configure :czc.tardis.io/FilePicker

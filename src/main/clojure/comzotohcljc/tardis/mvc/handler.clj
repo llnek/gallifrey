@@ -45,6 +45,7 @@
 (use '[clojure.tools.logging :only [info warn error debug] ])
 (use '[comzotohcljc.util.core :only [MuObj Try! nice-fpath] ])
 (use '[comzotohcljc.tardis.io.triggers])
+(use '[comzotohcljc.tardis.io.http :only [http-basic-config] ])
 (use '[comzotohcljc.tardis.io.netty])
 (use '[comzotohcljc.tardis.io.core])
 (use '[comzotohcljc.tardis.core.sys])
@@ -53,7 +54,7 @@
 (use '[comzotohcljc.netty.comms :only [sendRedirect makeRouteCracker
                                        makeServerNetty finzNetty addListener
                                        makeHttpReply closeCF] ])
-(use '[comzotohcljc.util.str :only [hgl? nsb] ])
+(use '[comzotohcljc.util.str :only [hgl? nsb strim] ])
 (use '[comzotohcljc.util.meta :only [make-obj] ])
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -185,16 +186,16 @@
    ^Channel ch
    ^comzotohcljc.util.core.MuObj evt]
   (let [ wms (.getAttr src :waitMillis)
-         pms (.collect ri mc) ]
-    (.setf! evt :router (.getHandler ri))
-    (.setf! evt :params (merge {} pms))
-    (.setf! evt :route ri)
+         pms (.collect ri mc)
+         options { :router (.getHandler ri)
+                   :params (merge {} pms)
+                   :route ri } ]
     (let [ ^comzotohcljc.tardis.io.core.EmitterAPI co src
            ^comzotohcljc.tardis.io.core.WaitEventHolder
            w (make-async-wait-holder (make-netty-trigger ch evt co) evt) ]
       (.timeoutMillis w wms)
       (.hold co w)
-      (.dispatch co evt))) )
+      (.dispatch co evt options))) )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -247,6 +248,17 @@
     (.setAttr! co :rtcObj rtc)
     (.setAttr! co :netty nes)
     co))
+
+(defmethod comp-configure :czc.tardis.io/NettyMVC
+  [^comzotohcljc.tardis.core.sys.Element co cfg]
+  (let [ c (nsb (:context cfg)) ]
+    (.setAttr! co :contextPath (strim c))
+    (.setAttr! co :cacheMaxAgeSecs (:cacheMaxAgeSecs cfg))
+    (.setAttr! co :useETags (:useETags cfg))
+    (.setAttr! co :welcomeFiles (:welcomeFiles cfg))
+    (.setAttr! co :router (strim (:handler cfg)))
+    (.setAttr! co :errorRouter (strim (:errorHandler cfg)))
+    (http-basic-config co cfg) ))
 
 (defmethod comp-initialize :czc.tardis.io/NettyMVC
   [^comzotohcljc.tardis.core.sys.Element co]

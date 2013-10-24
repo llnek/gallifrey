@@ -89,7 +89,7 @@
 
 (defn- sockItDown [^comzotohcljc.tardis.io.core.EmitterAPI co ^Socket soc]
   (let []
-    (.dispatch co (ioes-reify-event co soc))))
+    (.dispatch co (ioes-reify-event co soc) {} )))
 
 (defmethod ioes-start :czc.tardis.io/SocketIO
   [^comzotohcljc.tardis.core.sys.Element co]

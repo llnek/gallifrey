@@ -140,7 +140,7 @@
 
 (defmethod loopable-wakeup :czc.tardis.io/RepeatingTimer
   [^comzotohcljc.tardis.io.core.EmitterAPI co & args]
-  (.dispatch co (ioes-reify-event co)))
+  (.dispatch co (ioes-reify-event co) {} ))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -191,7 +191,7 @@
 (defmethod loopable-wakeup :czc.tardis.io/OnceTimer
   [^comzotohcljc.tardis.io.core.EmitterAPI co & args]
   (do
-    (.dispatch co (ioes-reify-event co))
+    (.dispatch co (ioes-reify-event co) {} )
     (.stop ^Startable co)) )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

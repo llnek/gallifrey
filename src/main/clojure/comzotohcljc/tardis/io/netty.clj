@@ -150,14 +150,6 @@
     (with-meta
       (reify
 
-        MuObj
-
-        (setf! [_ k v] (.mm-s impl k v) )
-        (seq* [_] (seq (.mm-m* impl)))
-        (getf [_ k] (.mm-g impl k) )
-        (clrf! [_ k] (.mm-r impl k) )
-        (clear! [_] (.mm-c impl))
-
         Identifiable
         (id [_] eeid)
 
@@ -288,7 +280,7 @@
                           ^comzotohcljc.tardis.core.sys.Element co
                           :waitMillis))
         (.hold co w)
-        (.dispatch co evt))) ))
+        (.dispatch co evt {}))) ))
 
 (defn- init-netty
   [^comzotohcljc.tardis.core.sys.Element co reqcb]
