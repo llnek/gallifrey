@@ -114,7 +114,7 @@
 
       { :principal @user :credential @pwd } )))
 
-(defn refashion "" [^HTTPEvent evt acctObj roles]
+(defn realign! "" [^HTTPEvent evt acctObj roles]
   (let [ ^comzotohcljc.tardis.io.ios.WebSession mvs (.getSession evt)
          ^comzotohcljc.tardis.core.sys.Element netty (.emitter evt)
          idleSecs (.getAttr netty :cacheMaxAgeSecs) ]
@@ -123,16 +123,16 @@
       (.setAttribute TS_FLAG
                      (+ (System/currentTimeMillis)
                         (* idleSecs 1000)))
-      (.setAttribute SSID_FLAG (new-uuid))
+      (.setAttribute (keyword SSID_FLAG) (new-uuid))
       (.yield ))))
 
 
-(defn- hibernate "" [^comzotohcljc.tardis.io.ios.WebSession mvs
-                    ^HTTPResult res]
-  (let [ ctr (.container ^Emitter (.emitter res))
+(defn- hibernate "" [ ^HTTPEvent evt ^HTTPResult res ]
+  (let [ ^comzotohcljc.tardis.io.ios.WebSession mvs (.getSession evt)
+         ctr (.container ^Emitter (.emitter res))
          pkey (-> ctr (.getAppKey)(bytesify))
          s (reduce (fn [sum en]
-                     (add-delim! sum NV_SEP (str (first en) ":" (last en))))
+                     (add-delim! sum NV_SEP (str (name (first en)) ":" (last en))))
                    (StringBuilder.)
                    (seq (.listAttributes mvs)))
          data (URLEncoder/encode (nsb s) "utf-8")
@@ -149,7 +149,7 @@
     ))
 
 
-(defn- resurrect [ ^HTTPEvent evt ]
+(defn- resurrect "" [ ^HTTPEvent evt ]
   (let [ ^Emitter netty (.emitter evt)
          ctr (.container netty)
          pkey (-> ctr (.getAppKey)(bytesify))
@@ -172,63 +172,72 @@
                      ^comzotohcljc.tardis.core.sys.Element
                      netty :cacheMaxAgeSecs)
            ^comzotohcljc.tardis.io.ios.WebSession mvs (.getSession evt) ]
-      (doseq [ ^String s (seq ss) ]
-          (let [ [n v] (StringUtils/split s ":") ]
-            (.setAttribute mvs n v)))
+
+      (doseq [ s (seq ss) ]
+        (let [ [n v] (StringUtils/split ^String s ":") ]
+          (.setAttribute mvs (keyword n) v)))
+
       (let [ ts (conv-long (nsb (.getAttribute mvs TS_FLAG)) -1) ]
         (if (or (< ts 0)
                 (< ts (System/currentTimeMillis)))
           (throw (AuthError. "Expired Session.")))
         (.setAttribute mvs
-                       TS_FLAG
+                       (keyword TS_FLAG)
                        (+ (System/currentTimeMillis)
-                          (* idleSecs 1000))))
+                          (* idleSecs 1000)))
+        (.setAttribute mvs :lastTS (System/currentTimeMillis)))
       )))
 
 (defn make-session [co ssl]
-  (let [ impl (make-mmap)
+  (let [ attrs (make-mmap)
+         impl (make-mmap)
          fc (fn []
               (.mm-s impl :maxIdleSecs 3600)
-              (.mm-s impl :valid false)
-              (.mm-s impl :createTS  0)
-              (.mm-s impl :lastTS  0)
-              (.mm-s impl :newOne true)) ]
-
+              (.mm-s impl :newOne true)
+              (.mm-s attrs :createTS  0)
+              (.mm-s attrs :lastTS  0)) ]
+    (fc)
     (with-meta
       (reify
 
         WebSession
-          (setAttribute [_ k v] (.mm-s impl k v) )
-          (getAttribute [_ k] (.mm-g impl k) )
-          (removeAttribute [_ k] (.mm-r impl k) )
-          (clear [_] (.mm-c impl))
-          (listAttributes [_] (.mm-m* impl))
+          (setAttribute [_ k v]
+            (when (= :lastTS k) (.mm-s impl :newOne false))
+            (.mm-s attrs k v))
+          (getAttribute [_ k] (.mm-g attrs k) )
+          (removeAttribute [_ k] (.mm-r attrs k) )
+          (clear [_] (.mm-c attrs))
+          (listAttributes [_] (.mm-m* attrs))
 
           (setMaxInactiveInterval [_ idleSecs]
-            (when (and (number? idleSecs)(> idleSecs 0))
+            (when (and (number? idleSecs)
+                       (> idleSecs 0))
               (.mm-s impl
                    :maxIdleSecs idleSecs)))
 
           (isNew [_] (.mm-g impl :newOne))
           (isSSL [_] ssl)
 
-          (invalidate [_] (.mm-c impl) (fc))
+          (invalidate [_]
+            (.mm-c attrs)
+            (.mm-c impl)
+            (fc))
+
           (yield [_]
-            (.mm-s impl :createTS  (System/currentTimeMillis))
-            (.mm-s impl :lastTS  (System/currentTimeMillis))
-            (.mm-s impl :valid true)
+            (.mm-s attrs :createTS  (System/currentTimeMillis))
+            (.mm-s attrs :lastTS  (System/currentTimeMillis))
+            (.mm-s impl :maxIdleSecs 3600)
             (.mm-s impl :newOne true))
 
-          (getCreationTime [_]  (.mm-g impl :createTS))
-          (getId [_] (.mm-g impl SSID_FLAG))
-          (getLastAccessedTime [_] (.mm-g impl :lastTS))
+          (getCreationTime [_]  (.mm-g attrs :createTS))
+          (getId [_] (.mm-g attrs SSID_FLAG))
+          (getLastAccessedTime [_] (.mm-g attrs :lastTS))
           (getMaxInactiveInterval [_] (.mm-g impl :maxIdleSecs))
 
         IOSession
-          (getImpl [_] nil)
-          (handleResult [_ evt res] nil)
-          (handleEvent [this evt]
-            (resurrect this evt)))
+          (handleResult [this evt res] (hibernate evt res))
+          (handleEvent [this evt] (resurrect evt))
+          (getImpl [_] nil))
 
       { :typeid :czc.tardis.io/WebSession } )))
 

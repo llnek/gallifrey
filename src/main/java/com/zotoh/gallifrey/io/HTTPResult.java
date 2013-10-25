@@ -42,6 +42,8 @@ public interface HTTPResult extends IOResult {
   public void setChunked(boolean c);
   public void setContent(Object data);
 
+  public int getStatus();
+  
 }
 
 

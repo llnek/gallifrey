@@ -25,6 +25,7 @@
 (import '(org.jboss.netty.channel Channel ChannelFuture ChannelFutureListener))
 (import '(org.jboss.netty.handler.codec.http
   HttpResponse HttpHeaders HttpHeaders$Names HttpVersion
+  DefaultCookie
   CookieEncoder DefaultHttpResponse))
 (import '(java.nio.channels ClosedChannelException))
 (import '(java.io OutputStream IOException))
@@ -138,11 +139,20 @@
     (when-not (nil? cf)
       (.addListener cf ChannelFutureListener/CLOSE ))))
 
+(defn- cookieToNetty ^DefaultCookie [^HttpCookie c]
+  (doto (DefaultCookie. (.getName c) (.getValue c))
+        (.setDomain (.getDomain c))
+        (.setHttpOnly (.isHttpOnly c))
+        (.setMaxAge (.getMaxAge c))
+        (.setPath (.getPath c))
+        (.setSecure (.getSecure c))
+        (.setVersion (.getVersion c))) )
+
 (defn- cookiesToNetty ^String [^List cookies]
   (persistent! (reduce (fn [sum ^HttpCookie c]
                          (conj! sum
                                 (-> (doto (CookieEncoder. true)
-                                          (.addCookie (.getName c)(.getValue c)))
+                                          (.addCookie (cookieToNetty c)))
                                     (.encode))))
                        (transient [])
                        (seq cookies)) ))

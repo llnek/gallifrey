@@ -117,12 +117,17 @@ target (justJar: '') {
       target: clean
      ================================= */
 
+target (cleanPackDir: '') {
+  delete ( includeEmptyDirs: true) {
+    fileset (followsymlinks: false, dir: "${packDir}", includes: '**/*')
+  }
+}
 target (clean: '') {
-  delete (dir: "${buildDir}")
-  delete (dir: "${qaDir}")
-  delete (dir: "${distribDir}" )
-  delete (dir: "${packDir}" )
-  delete (dir: "${libDir}" )
+  depends (cleanPackDir)
+  delete ( dir: "${buildDir}")
+  delete ( dir: "${qaDir}")
+  delete ( dir: "${distribDir}" )
+  delete ( dir: "${libDir}" )
   mkdir (dir: "${gantBuildDir}")
 }
 
@@ -160,7 +165,7 @@ target (distroPackage: '') {
 }
 
 target (distroInit: '') {
-  delete (dir: "${packDir}")
+  depends (cleanPackDir)
   mkdir (dir: "${packDir}")
   mkdir (dir: "${packDir}/conf")
   //mkdir (dir: "${packDir}/boot")

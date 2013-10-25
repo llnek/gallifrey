@@ -24,7 +24,7 @@
 (import '(java.util ArrayList List))
 (import '(java.io IOException))
 
-(import '(com.zotoh.gallifrey.io HTTPEvent))
+(import '(com.zotoh.gallifrey.io HTTPEvent HTTPResult))
 (import '(javax.net.ssl SSLContext))
 (import '(org.jboss.netty.handler.codec.http
   HttpRequest HttpResponse CookieDecoder CookieEncoder
@@ -37,7 +37,7 @@
 (import '(com.zotoh.frwk.net NetUtils))
 
 (import '(com.zotoh.frwk.core Hierarchial Identifiable))
-(import '(com.zotoh.gallifrey.io WebSockEvent WebSockResult))
+(import '(com.zotoh.gallifrey.io IOSession WebSockEvent WebSockResult))
 (import '(com.zotoh.frwk.io XData))
 (import '(org.jboss.netty.handler.codec.http.websocketx
   WebSocketFrame
@@ -244,8 +244,13 @@
 
         (getResultObj [_] res)
         (replyResult [this]
-          (let [ ^comzotohcljc.tardis.io.core.WaitEventHolder
+          (let [ ^IOSession mvs (.getSession this)
+                 code (.getStatus res)
+                 ^comzotohcljc.tardis.io.core.WaitEventHolder
                  wevt (.release co this) ]
+            (cond
+              (and (>= code 200) (< code 400)) (.handleResult mvs this res)
+              :else nil)
             (when-not (nil? wevt)
               (.resumeOnResult wevt res))))
 

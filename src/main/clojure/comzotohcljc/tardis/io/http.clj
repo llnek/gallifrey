@@ -45,7 +45,7 @@
 (import '(org.eclipse.jetty.util.ssl SslContextFactory))
 (import '(org.eclipse.jetty.util.thread QueuedThreadPool))
 (import '(org.eclipse.jetty.webapp WebAppContext))
-(import '(com.zotoh.gallifrey.io ServletEmitter Emitter))
+(import '(com.zotoh.gallifrey.io IOSession ServletEmitter Emitter))
 
 
 (import '(com.zotoh.gallifrey.io HTTPResult HTTPEvent JettyUtils))
@@ -295,6 +295,7 @@
 
       (setProtocolVersion [_ ver]  (.mm-s impl :version ver))
       (setStatus [_ code] (.mm-s impl :code code))
+      (getStatus [_] (.mm-g impl :code))
       (emitter [_] co)
       (addCookie [_ c]
         (let [ ^List a (.mm-g impl :cookies) ]
@@ -439,8 +440,13 @@
 
       (getResultObj [_] result)
       (replyResult [this]
-        (let [ ^comzotohcljc.tardis.io.core.WaitEventHolder
+        (let [ ^IOSession mvs (.getSession this)
+               code (.getStatus result)
+               ^comzotohcljc.tardis.io.core.WaitEventHolder
                wevt (.release ^comzotohcljc.tardis.io.core.EmitterAPI co this) ]
+          (cond
+            (and (>= code 200)(< code 400)) (.handleResult mvs this result)
+            :else nil)
           (when-not (nil? wevt)
             (.resumeOnResult wevt result))))
 

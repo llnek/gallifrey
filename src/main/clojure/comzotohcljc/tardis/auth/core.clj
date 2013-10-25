@@ -57,7 +57,7 @@
 
 (use '[comzotohcljc.tardis.core.constants])
 (use '[comzotohcljc.tardis.core.wfs])
-(use '[comzotohcljc.tardis.io.ios :only [getSignupInfo getLoginInfo refashion] ])
+(use '[comzotohcljc.tardis.io.ios :only [getSignupInfo getLoginInfo realign!] ])
 (use '[comzotohcljc.tardis.auth.dms])
 (use '[comzotohcljc.dbio.connect :only [dbio-connect] ])
 (use '[comzotohcljc.dbio.core])
@@ -201,6 +201,7 @@
             (debug "about to add a user account - " @uid)
             (.setLastResult job { :account
               (.addAccount pa (merge info { :principal @uid } )) })
+            (realign! evt (:account (.getLastResult job)) [])
             true
             (catch Throwable t#
               (error t# "")
@@ -221,7 +222,7 @@
         (try
           (let [ acct (.getAccount pa info)
                  rs (.getRoles pa acct) ]
-            (refashion evt acct rs)
+            (realign! evt acct rs)
             true)
           (catch Throwable t#
             (error t# "")
