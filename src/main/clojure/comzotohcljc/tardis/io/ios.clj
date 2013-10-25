@@ -42,7 +42,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;(set! *warn-on-reflection* true)
 
-(def ^:private SESSION_COOKIE "gallifrey" )
+(def ^:private SESSION_COOKIE "gallifrey_ssid" )
 (def ^:private SSID_FLAG "f_01ec")
 (def ^:private TS_FLAG "f_684f" )
 (def ^:private NV_SEP "\u0000")

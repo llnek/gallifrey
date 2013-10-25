@@ -22,9 +22,10 @@
 (import '(org.apache.commons.io FilenameUtils FileUtils))
 (import '(org.apache.commons.lang3 StringUtils))
 
+(import '(freemarker.template Configuration Template DefaultObjectWrapper))
 (import '(java.util Map Properties))
 (import '(java.net URL))
-(import '(java.io File))
+(import '(java.io File StringWriter))
 (import '(com.zotoh.gallifrey.runtime AppMain))
 (import '(com.zotoh.gallifrey.etc PluginFactory Plugin))
 (import '(com.zotoh.frwk.dbio MetaCache Schema DBIOLocal DBAPI))
@@ -39,6 +40,7 @@
 
 (import '(com.zotoh.gallifrey.io IOEvent))
 (import '(com.zotoh.frwk.util Schedulable CoreUtils))
+(import '(com.zotoh.frwk.io XData))
 (import '(com.zotoh.wflow.core Job))
 (import '(com.zotoh.wflow Pipeline))
 
@@ -154,6 +156,7 @@
   (reifyOneService [_ sid cfg] )
   (reifyService [_ svc sid cfg] )
   (reifyServices [_] )
+  (loadTemplate [_ tpl ctx] )
   (enabled? [_] ))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -180,7 +183,7 @@
 
 (defn- getDBAPI? ^DBAPI [^String gid cfg ^String pkey mcache]
   (let [ ^Map c (.get (DBIOLocal/getCache))
-         mkey (str "jdbc." (name gid))
+         mkey (name gid)
          jdbc (make-jdbc mkey cfg
                             (pwdify (:passwd cfg) pkey)) ]
     (when-not (.containsKey c mkey)
@@ -206,7 +209,8 @@
       (.dispose sc))))
 
 (defn- make-app-container [pod]
-  (let [ impl (make-mmap) ]
+  (let [ ftlCfg (Configuration.)
+         impl (make-mmap) ]
     (info "about to create an app-container...")
     (with-meta
       (reify
@@ -249,10 +253,14 @@
 
         Startable
 
-        (start [_]
+        (start [this]
           (let [ ^comzotohcljc.tardis.core.sys.Registry srg (.mm-g impl K_SVCS)
                  main (.mm-g impl :main-app) ]
             (info "container starting all services...")
+            (doto ftlCfg
+              (.setDirectoryForTemplateLoading
+                (File. (.getAppDir this) (str DN_PAGES "/" DN_VIEWS)))
+              (.setObjectWrapper (DefaultObjectWrapper.)))
             (doseq [ [k v] (seq* srg) ]
               (info "service: " k " about to start...")
               (.start ^Startable v))
@@ -302,6 +310,16 @@
             (releaseSysResources this) ))
 
         ContainerAPI
+
+        (loadTemplate [_ tpl ctx]
+          (let [ out (StringWriter.)
+                 ts (str (if (.startsWith ^String tpl "/") "" "/") tpl
+                     (if (.endsWith ^String tpl ".ftl") "" ".ftl"))
+                 ^Template tp (.getTemplate ftlCfg ts) ]
+            (when-not (nil? tp)
+              (.process tp ctx out))
+            (.flush out)
+            [ (XData. (.toString out)) "text/html" ] ))
 
         (enabled? [_]
           (let [ env (.mm-g impl K_ENVCONF)
