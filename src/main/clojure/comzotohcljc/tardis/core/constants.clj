@@ -130,6 +130,7 @@
 
 (def K_META :meta )
 
+(def EV_OPTS "____eventoptions")
 (def JS_LAST "____lastresult")
 (def JS_CRED "credential")
 (def JS_USER "principal")

@@ -143,6 +143,7 @@
             (try
               (let [ p (Pipeline. job (if (hgl? c1) c1 c0))
                      q (if (nil? p) (make-OrphanFlow job) p) ]
+                (.setv job EV_OPTS options)
                 (.start ^Pipeline q))
               (catch Throwable e#
                 (-> (make-FatalErrorFlow job) (.start)))))))
@@ -313,15 +314,24 @@
 
         ContainerAPI
 
-        (loadTemplate [_ tpl ctx]
-          (let [ out (StringWriter.)
-                 ts (str (if (.startsWith ^String tpl "/") "" "/") tpl
-                     (if (.endsWith ^String tpl ".ftl") "" ".ftl"))
-                 ^Template tp (.getTemplate ftlCfg ts) ]
+        (loadTemplate [_ tpath ctx]
+          (let [ tpl (nsb tpath)
+                 ts (str (if (.startsWith tpl "/") "" "/") tpl)
+                 ^Template tp (.getTemplate ftlCfg ts)
+                 out (StringWriter.) ]
             (when-not (nil? tp)
               (.process tp ctx out))
             (.flush out)
-            [ (XData. (.toString out)) "text/html" ] ))
+            [ (XData. (.toString out))
+              (cond
+                (.endsWith tpl ".html")
+                "text/html"
+                (.endsWith tpl ".json")
+                "application/json"
+                (.endsWith tpl ".xml")
+                "application/xml"
+                :else
+                "text/plain") ] ))
 
         (enabled? [_]
           (let [ env (.mm-g impl K_ENVCONF)

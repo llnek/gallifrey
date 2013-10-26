@@ -29,6 +29,7 @@ public interface IOEvent extends Event {
 
   public void bindSession(IOSession s);
   public IOSession getSession();
+
 }
 
 
