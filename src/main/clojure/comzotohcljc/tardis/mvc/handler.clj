@@ -189,7 +189,7 @@
          pms (.collect ri mc)
          options { :router (.getHandler ri)
                    :params (merge {} pms)
-                   :route ri } ]
+                   :template (.getTemplate ri) } ]
     (let [ ^comzotohcljc.tardis.io.core.EmitterAPI co src
            ^comzotohcljc.tardis.io.core.WaitEventHolder
            w (make-async-wait-holder (make-netty-trigger ch evt co) evt) ]
@@ -224,13 +224,9 @@
               (serveRoute co r2 r3 ch evt)))
 
           :else
-          (let [ fp (serveWelcomeFile evt) ]
-            (if (nil? fp)
-              (handleStatic co ch req evt fp)
-              (do
-                (debug "failed to match uri: " (.getUri evt))
-                (serve-error co ch 404)
-                ))) )))
+          (do
+            (debug "failed to match uri: " (.getUri evt))
+            (serve-error co ch 404)) )))
     ))
 
 (defn- init-netty

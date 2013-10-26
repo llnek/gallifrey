@@ -34,6 +34,7 @@
 
 (defprotocol RouteInfo
   ""
+  (getTemplate [_] )
   (getHandler [_] )
   (getPath [_] )
   (isStatic? [_] )
@@ -58,6 +59,7 @@
 
         RouteInfo
 
+        (getTemplate [_] (.mm-g impl :template))
         (isStatic? [_] (.mm-g impl :static))
         (getHandler [_] handler)
         (getPath [_] route)

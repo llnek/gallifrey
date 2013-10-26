@@ -136,6 +136,8 @@
                  c0 (.getAttr src :router)
                  c1 (:router options)
                  job (make-job parObj evt) ]
+            (debug "event type = " (type evt))
+            (debug "event options = " options)
             (debug "event router = " c1)
             (debug "io router = " c0)
             (try
@@ -181,9 +183,8 @@
     (info "emitter synthesized - OK. handler => " hid)
     obj))
 
-(defn- getDBAPI? ^DBAPI [^String gid cfg ^String pkey mcache]
+(defn- getDBAPI? ^DBAPI [^String mkey cfg ^String pkey mcache]
   (let [ ^Map c (.get (DBIOLocal/getCache))
-         mkey (name gid)
          jdbc (make-jdbc mkey cfg
                             (pwdify (:passwd cfg) pkey)) ]
     (when-not (.containsKey c mkey)
@@ -196,10 +197,11 @@
          mcache (.getAttr co K_MCACHE)
          env (.getAttr co K_ENVCONF)
          cfg (:jdbc (:databases env))
-         jj (cfg (keyword gid)) ]
+         dk (if (hgl? gid) gid "_")
+         jj (cfg (keyword dk)) ]
     (if (nil? jj)
       nil
-      (getDBAPI? gid jj pkey mcache))))
+      (getDBAPI? dk jj pkey mcache))))
 
 (defn- releaseSysResources [^comzotohcljc.tardis.core.sys.Element co]
   (let [ ^Schedulable sc (.getAttr co K_SCHEDULER)
