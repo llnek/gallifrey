@@ -48,6 +48,9 @@
   </target>
 
   <target name="build-web">
+    <if> <equals arg1="${jslang}" arg2="clojurescript" />
+       <then> <antcall target="compile-cljscript"/> </then>
+    </if>
     <if> <equals arg1="${jslang}" arg2="typescript" />
        <then> <antcall target="compile-typescript"/> </then>
     </if>
@@ -204,6 +207,21 @@
       </runpath>
     </scalatest>
 
+  </target>
+
+  <target name="compile-cljscript">
+    <copy todir="${build.dir}/cljscript">
+      <fileset dir="${src.dir}/cljscript"><include name="*.cljs"/></fileset>
+    </copy>
+    <java classname="clojure.main" fork="true" failonerror="true" 
+      maxmemory="2048m" classpathref="compile.path.id">
+      <arg value="${basedir}/conf/cljsc.clj"/>
+      <arg value="${src.dir}/clojurescript"/>
+      <arg value="true"/>
+      <!-- advanced none whitespace simple -->
+      <arg value="none"/>
+      <arg value="${build.dir}/cljs"/>
+    </java>
   </target>
 
   <target name="compile-typescript">

@@ -21,8 +21,8 @@ src.dir=${basedir}/src/main
 out.test.dir=${pod.dir}/test-classes
 out.jar.dir=${pod.dir}/classes
 
-#jslang=typescript
-jslang=coffee
+jslang=@@WEBLANG@@
+
 
 
 

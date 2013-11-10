@@ -31,6 +31,7 @@
 (use '[comzotohcljc.tardis.etc.cli
        :only [createWeb createJetty createBasic
               antBuildApp bundleApp runAppBg
+              *GALLIFREY-WEBLANG*
               createSamples createDemo] ])
 (use '[comzotohcljc.i18n.resources :only [get-string] ])
 (use '[comzotohcljc.util.core :only [nice-fpath is-windows? flatten-nil conv-long rc-str] ])
@@ -41,6 +42,7 @@
 (use '[comzotohcljc.crypto.codec :only [create-strong-pwd pwdify] ])
 (use '[comzotohcljc.crypto.core :only [assert-jce PEM_CERT make-ssv1PKCS12 make-csrreq] ])
 (use '[comzotohcljc.tardis.core.constants])
+(use '[comzotohcljc.util.ini :only [parse-inifile] ])
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -58,6 +60,8 @@
 
 (defn- onCreateApp [ & args]
   (let [ hhh (getHomeDir)
+         hf (parse-inifile (File. hhh (str DN_CONF "/" (name K_PROPS))))
+         wlg (.optString hf "webdev" "lang" "coffee")
          ;; treat as domain e.g com.acme => app = acme
          app (nth args 2)
          t (re-matches #"^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z0-9_]+)*" app)
@@ -66,13 +70,14 @@
               (if (nil? (last t))
                 (first t)
                 (.substring ^String (last t) 1))) ]
-    (if (nil? id)
-      (throw (CmdHelpError.))
-      (case (nth args 1)
-        ("mvc" "web") (createWeb hhh id app)
-        "jetty" (createJetty hhh id app)
-        "basic" (createBasic hhh id app)
-        (throw (CmdHelpError.)))) ))
+    (binding [ *GALLIFREY-WEBLANG* wlg]
+      (if (nil? id)
+        (throw (CmdHelpError.))
+        (case (nth args 1)
+          ("mvc" "web") (createWeb hhh id app)
+          "jetty" (createJetty hhh id app)
+          "basic" (createBasic hhh id app)
+          (throw (CmdHelpError.))))) ))
 
 (defn- onCreate [ & args]
   (if (< (count args) 3)

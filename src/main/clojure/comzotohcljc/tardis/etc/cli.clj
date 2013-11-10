@@ -36,6 +36,7 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(def ^:dynamic *GALLIFREY-WEBLANG* "coffee")
 
 (defn- copy-files "" [^File srcDir ^File destDir ext]
   (FileUtils/copyDirectory
@@ -194,6 +195,7 @@
       (var-set fp (File. appDir "build.xs"))
       (FileUtils/writeStringToFile  ^File @fp
         (-> (FileUtils/readFileToString ^File @fp "utf-8")
+          (StringUtils/replace "@@WEBLANG@@" *GALLIFREY-WEBLANG*)
           (StringUtils/replace "@@APPTYPE@@" flavor)
           (StringUtils/replace "@@GALLIFREYHOME@@" (.getCanonicalPath hhhHome))) "utf-8")
 
@@ -209,8 +211,7 @@
                             :key-fn keyword)
          appDir (File. hhhHome (str "apps/" appId))
          wlib (doto (File. appDir "public/vendors") (.mkdirs))
-         hf (parse-inifile (File. hhhHome (str DN_CONF "/" (name K_PROPS))))
-         wlg (.optString hf "webdev" "lang" "coffee")
+         wlg *GALLIFREY-WEBLANG*
          buf (StringBuilder.)
          appDomainPath (.replace appDomain "." "/") ]
 
@@ -223,6 +224,8 @@
     (doseq [ s ["images" "scripts" "styles"]]
       (-> (File. appDir (str "public/" s)) (.mkdirs)))
 
+    (FileUtils/copyFileToDirectory (File. hhhHome "etc/web/cljsc.clj")
+                                   (File. appDir "conf"))
     (FileUtils/copyFileToDirectory (File. hhhHome "etc/web/favicon.png")
                                    (File. appDir "public/images"))
     (FileUtils/copyFileToDirectory (File. hhhHome "etc/web/pipe.clj")
