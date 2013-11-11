@@ -53,10 +53,6 @@ else
   check_linux
 fi
 
-# make a sym-link; hhh is much shorter.
-if [ ! -e $GALLIFREY_BIN/tardis ]; then
-  ln -s $GALLIFREY_BIN/gallifrey $GALLIFREY_BIN/tardis
-fi
 
 if [ "$JAVA_HOME" = "" ] ; then
   echo "Attempt to reference standard java location on system: /usr/bin."
@@ -170,7 +166,3 @@ else
 fi
 cd $CWD
 exit 0
-
-
-
-
