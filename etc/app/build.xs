@@ -15,9 +15,9 @@ build.type=@@APPTYPE@@
 ivy.lib.dir=${basedir}/lib
 lib.dir=${pod.dir}/lib
 
+web.dir=${basedir}/src/webapps
 test.dir=${basedir}/src/test
 src.dir=${basedir}/src/main
-web.dir=${basedir}/src/web
 
 out.test.dir=${pod.dir}/test-classes
 out.jar.dir=${pod.dir}/classes

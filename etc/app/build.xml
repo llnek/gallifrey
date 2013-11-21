@@ -42,12 +42,29 @@
     <antcall target="compile-and-jar"/>
     <if> <equals arg1="${build.type}" arg2="web" />
       <then>
-        <antcall target="build-web"/>
+        <antcall target="build-webapps"/>
       </then>
     </if>
   </target>
 
-  <target name="build-web">
+  <target name="build-webapps">
+    <for param="dir">
+      <path>
+        <dirset dir="${web.dir}">
+          <include name="*"/>
+        </dirset>
+      </path>
+      <sequential>
+        <var name="wappid" value="" unset="true"/>
+        <basename property="wappid" file="@{dir}"/>
+        <antcall target="build-web-app"/>
+      </sequential>
+    </for>
+  </target>
+
+  <target name="build-web-app">
+    <mkdir dir="${build.dir}/web_scripts/${wappid}"/>
+    <mkdir dir="${build.dir}/web_styles/${wappid}"/>
     <switch value="${jslang}">
       <case value="clojurescript">
         <antcall target="compile-cljscript"/>
@@ -68,6 +85,8 @@
         <antcall target="compile-scss"/>
       </case>
     </switch>
+    <antcall target="compile-images"/>
+    <antcall target="compile-pages"/>
   </target>
 
   <target name="finz-build">
@@ -216,86 +235,109 @@
   </target>
 
   <target name="compile-cljscript">
-    <copy todir="${build.dir}/web_scripts">
-      <fileset dir="${web.dir}/scripts"><include name="**/*.cljs"/></fileset>
+    <copy todir="${build.dir}/web_scripts/${wappid}">
+      <fileset dir="${web.dir}/${wappid}/scripts"><include name="**/*.cljs"/></fileset>
     </copy>
-    <java classname="clojure.main" fork="true" failonerror="true" 
+    <java classname="clojure.main" fork="true" failonerror="true"
       maxmemory="2048m" classpathref="compile.path.id">
       <arg value="${basedir}/conf/cljsc.clj"/>
-      <arg value="${web.dir}/scripts"/>
+      <arg value="${web.dir}/${wappid}/scripts"/>
       <arg value="true"/>
       <!-- advanced none whitespace simple -->
       <arg value="none"/>
-      <arg value="${build.dir}/web_scripts"/>
+      <arg value="${build.dir}/web_scripts/${wappid}"/>
     </java>
   </target>
 
   <target name="compile-typescript">
-    <copy todir="${build.dir}/web_scripts">
-      <fileset dir="${web.dir}/scripts"><include name="**/*.ts"/></fileset>
+    <copy todir="${build.dir}/web_scripts/${wappid}">
+      <fileset dir="${web.dir}/${wappid}/scripts"><include name="**/*.ts"/></fileset>
     </copy>
-    <exec executable="tsc" dir="${build.dir}/web_scripts">
-      <arg value="--outDir"/> <arg value="--output"/> <arg value="${build.dir}/web_scripts"/>
+    <exec executable="tsc" dir="${build.dir}/web_scripts/${wappid}">
+      <arg value="--outDir"/> <arg value="--output"/> <arg value="${build.dir}/web_scripts/${wappid}"/>
       <arg value="**/*.ts"/>
     </exec>
   </target>
 
   <target name="compile-coffee">
-    <copy todir="${build.dir}/web_scripts">
-      <fileset dir="${web.dir}/scripts"><include name="**/*.coffee"/></fileset>
+    <copy todir="${build.dir}/web_scripts/${wappid}">
+      <fileset dir="${web.dir}/${wappid}/scripts"><include name="**/*.coffee"/></fileset>
     </copy>
     <exec executable="coffee">
-      <arg value="--bare"/> <arg value="--output"/> <arg value="${build.dir}/web_scripts"/>
-      <arg value="--compile"/> <arg value="${build.dir}/web_scripts"/>
+      <arg value="--bare"/> <arg value="--output"/> <arg value="${build.dir}/web_scripts/${wappid}"/>
+      <arg value="--compile"/> <arg value="${build.dir}/web_scripts/${wappid}"/>
     </exec>
   </target>
 
   <target name="compile-js">
-    <copy todir="${basedir}/public/scripts">
-      <fileset dir="${build.dir}/web_scripts"><include name="**/*.js"/></fileset>
-      <fileset dir="${web.dir}/scripts"><include name="**/*.js"/></fileset>
+    <copy todir="${build.dir}/web_scripts/${wappid}">
+      <fileset dir="${web.dir}/${wappid}/scripts"><include name="**/*.js"/></fileset>
+    </copy>
+    <mkdir dir="${basedir}/public/scripts/${wappid}"/>
+    <copy todir="${basedir}/public/scripts/${wappid}">
+      <fileset dir="${build.dir}/web_scripts/${wappid}"><include name="**/*.js"/></fileset>
     </copy>
   </target>
 
   <target name="compile-less">
-    <copy todir="${build.dir}/web_styles">
-      <fileset dir="${web.dir}/styles"><include name="**/*.less"/></fileset>
+    <copy todir="${build.dir}/web_styles/${wappid}">
+      <fileset dir="${web.dir}/${wappid}/styles"><include name="**/*.less"/></fileset>
     </copy>
     <apply executable="lessc" parallel="false">
-      <fileset dir="${build.dir}/web_styles">
+      <fileset dir="${build.dir}/web_styles/${wappid}">
         <include name="**/*.less"/>
       </fileset>
       <srcfile/>
       <chainedmapper>
         <mapper type="glob" from="*.less" to="*.css"/>
-        <globmapper from="*" to="${build.dir}/web_styles/*"/>
+        <globmapper from="*" to="${build.dir}/web_styles/${wappid}/*"/>
       </chainedmapper>
       <targetfile/>
     </apply>
-    <copy todir="${basedir}/public/styles">
-      <fileset dir="${build.dir}/web_styles"><include name="**/*.css"/></fileset>
-      <fileset dir="${web.dir}/styles"><include name="**/*.css"/></fileset>
+    <copy todir="${build.dir}/web_styles/${wappid}">
+      <fileset dir="${web.dir}/${wappid}/styles"><include name="**/*.css"/></fileset>
+    </copy>
+    <mkdir dir="${basedir}/public/styles/${wappid}"/>
+    <copy todir="${basedir}/public/styles/${wappid}">
+      <fileset dir="${build.dir}/web_styles/${wappid}"><include name="**/*.css"/></fileset>
     </copy>
   </target>
 
   <target name="compile-scss">
-    <copy todir="${build.dir}/web_styles">
-      <fileset dir="${web.dir}/styles"><include name="**/*.scss"/></fileset>
+    <copy todir="${build.dir}/web_styles/${wappid}">
+      <fileset dir="${web.dir}/${wappid}/styles"><include name="**/*.scss"/></fileset>
     </copy>
     <apply executable="sass" parallel="false">
-      <fileset dir="${build.dir}/web_styles">
+      <fileset dir="${build.dir}/web_styles/${wappid}">
         <include name="**/*.scss"/>
       </fileset>
       <srcfile/>
       <chainedmapper>
         <mapper type="glob" from="*.scss" to="*.css"/>
-        <globmapper from="*" to="${build.dir}/web_styles/*"/>
+        <globmapper from="*" to="${build.dir}/web_styles/${wappid}/*"/>
       </chainedmapper>
       <targetfile/>
     </apply>
-    <copy todir="${basedir}/public/styles">
-      <fileset dir="${build.dir}/web_styles"><include name="**/*.css"/></fileset>
-      <fileset dir="${web.dir}/styles"><include name="**/*.css"/></fileset>
+    <copy todir="${build.dir}/web_styles/${wappid}">
+      <fileset dir="${web.dir}/${wappid}/styles"><include name="**/*.css"/></fileset>
+    </copy>
+    <mkdir dir="${basedir}/public/styles/${wappid}"/>
+    <copy todir="${basedir}/public/styles/${wappid}">
+      <fileset dir="${build.dir}/web_styles/${wappid}"><include name="**/*.css"/></fileset>
+    </copy>
+  </target>
+
+  <target name="compile-images">
+    <mkdir dir="${basedir}/public/images/${wappid}"/>
+    <copy todir="${basedir}/public/images/${wappid}">
+      <fileset dir="${web.dir}/${wappid}/images"><include name="**/*"/></fileset>
+    </copy>
+  </target>
+
+  <target name="compile-pages">
+    <mkdir dir="${basedir}/public/pages/${wappid}"/>
+    <copy todir="${basedir}/public/pages/${wappid}">
+      <fileset dir="${web.dir}/${wappid}/pages"><include name="**/*"/></fileset>
     </copy>
   </target>
 
@@ -354,6 +396,7 @@
   </target>
 
 </project>
+
 
 
 

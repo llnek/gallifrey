@@ -218,18 +218,19 @@
          buf (StringBuilder.)
          appDomainPath (.replace appDomain "." "/") ]
 
-    (doseq [ s ["images" "scripts" "styles"]]
+    (doseq [ s ["pages" "images" "scripts" "styles"]]
+      (-> (File. appDir (str "src/webapps/main/" s)) (.mkdirs)))
+
+    (doseq [ s ["pages" "images" "scripts" "styles"]]
       (-> (File. appDir (str "public/" s)) (.mkdirs)))
 
     (FileUtils/copyFileToDirectory (File. hhhHome "etc/web/cljsc.clj")
                                    (File. appDir "conf"))
     (FileUtils/copyFileToDirectory (File. hhhHome "etc/web/favicon.png")
-                                   (File. appDir "public/images"))
+                                   (File. appDir "src/webapps/main/images"))
     (FileUtils/copyFileToDirectory (File. hhhHome "etc/web/pipe.clj")
                                    (File. appDir (str "src/main/clojure/" appDomainPath)))
 
-    (-> (File. appDir "src/web/scripts/") (.mkdirs))
-    (-> (File. appDir "src/web/styles") (.mkdirs))
     (-> (File. appDir "src/test/js") (.mkdirs))
 
     (FileUtils/copyFile wfc (File. wlib ".list"))
@@ -278,8 +279,7 @@
                                      (File. appDir "conf"))
       (FileUtils/copyFileToDirectory (File. hhhHome "etc/netty/routes.conf")
                                      (File. appDir "conf"))
-      (FileUtils/copyFileToDirectory (File. hhhHome "etc/web/favicon.png")
-                                     (File. appDir "public/images"))
+
       (doseq [ s ["errors" "htmls"]]
         (-> (File. appDir (str "pages/" s)) (.mkdirs)))
 
@@ -287,7 +287,7 @@
       (copy-files (File. hhhHome "etc/netty") (File. appDir "pages/htmls") "ftl")
 
       (FileUtils/copyFileToDirectory (File. hhhHome "etc/netty/index.html")
-                                     (File. appDir "public"))
+                                     (File. appDir "src/webapps/main/pages"))
 
       (var-set fp (File. appDir "conf/routes.conf"))
       (FileUtils/writeStringToFile ^File @fp
