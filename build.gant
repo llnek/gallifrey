@@ -196,7 +196,7 @@ target (distroInit: '') {
 
 target (packAndDistro : '') {
   depends (packRes,
-           packDocs,
+           //packDocs,
            packSrc,
            packLics,
            packBin,

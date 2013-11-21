@@ -44,9 +44,10 @@
   SslConnectionFactory))
 (import '(org.eclipse.jetty.util.ssl SslContextFactory))
 (import '(org.eclipse.jetty.util.thread QueuedThreadPool))
-(import '(org.eclipse.jetty.webapp WebAppContext))
+(import '(org.eclipse.jetty.server.handler AbstractHandler ContextHandler))
 (import '(com.zotoh.gallifrey.io IOSession ServletEmitter Emitter))
-
+(import '(org.eclipse.jetty.webapp WebAppContext))
+(import '(javax.servlet.http HttpServletRequest HttpServletResponse))
 
 (import '(com.zotoh.gallifrey.io HTTPResult HTTPEvent JettyUtils))
 (import '(com.zotoh.gallifrey.core Container))
@@ -242,8 +243,46 @@
 
     co))
 
+(defn- dispREQ [ ^comzotohcljc.tardis.core.sys.Element co
+                 ^Continuation ct req rsp]
+  (let [ evt (ioes-reify-event co req)
+         wm (.getAttr co :waitMillis) ]
+    (doto ct
+      (.setTimeout wm)
+      (.suspend rsp))
+    (let [ ^comzotohcljc.tardis.io.core.WaitEventHolder
+           w  (make-async-wait-holder (make-servlet-trigger req rsp co) evt)
+          ^comzotohcljc.tardis.io.core.EmitterAPI src co ]
+      (.timeoutMillis w wm)
+      (.hold src w)
+      (.dispatch src evt {}))))
+
+(defn- serviceJetty "" [ co ^HttpServletRequest req ^HttpServletResponse rsp]
+  (let [ c (ContinuationSupport/getContinuation req) ]
+    (when (.isInitial c)
+      (TryC
+          (dispREQ co req rsp) ))))
 
 (defmethod ioes-start :czc.tardis.io/JettyIO
+  [^comzotohcljc.tardis.core.sys.Element co]
+  (let [ ^comzotohcljc.tardis.core.sys.Element ctr (.parent ^Hierarchial co)
+         ^Server jetty (.getAttr co :jetty)
+         ^File app (.getAttr ctr K_APPDIR)
+         ^String cp (strim (.getAttr co :contextPath))
+         myHandler (proxy [AbstractHandler] []
+                     (handle [target,baseReq,req,rsp]
+                       (serviceJetty co req rsp))) ]
+    ;; static resources are based from resBase, regardless of context
+    (.setHandler jetty (doto (ContextHandler.)
+                         (.setContextPath cp)
+                         (.setResourceBase (-> app (.toURI)(.toURL)(.toString)))
+                         (.setClassLoader (.getAttr co K_APP_CZLR))
+                         (.setHandler myHandler)))
+    (.start jetty)
+    (ioes-started co)))
+
+
+(defn _ioes-start ;;:czc.tardis.io/JettyIO
   [^comzotohcljc.tardis.core.sys.Element co]
   (let [ ^comzotohcljc.tardis.core.sys.Element ctr (.parent ^Hierarchial co)
          ^Server jetty (.getAttr co :jetty)
