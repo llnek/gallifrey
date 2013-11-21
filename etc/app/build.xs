@@ -17,10 +17,12 @@ lib.dir=${pod.dir}/lib
 
 test.dir=${basedir}/src/test
 src.dir=${basedir}/src/main
+web.dir=${basedir}/src/web
 
 out.test.dir=${pod.dir}/test-classes
 out.jar.dir=${pod.dir}/classes
 
+csslang=@@WEBCSSLANG@@
 jslang=@@WEBLANG@@
 
 

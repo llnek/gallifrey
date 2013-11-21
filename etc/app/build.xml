@@ -48,17 +48,26 @@
   </target>
 
   <target name="build-web">
-    <if> <equals arg1="${jslang}" arg2="clojurescript" />
-       <then> <antcall target="compile-cljscript"/> </then>
-    </if>
-    <if> <equals arg1="${jslang}" arg2="typescript" />
-       <then> <antcall target="compile-typescript"/> </then>
-    </if>
-    <if> <equals arg1="${jslang}" arg2="coffee" />
-       <then> <antcall target="compile-coffee"/> </then>
-    </if>
+    <switch value="${jslang}">
+      <case value="clojurescript">
+        <antcall target="compile-cljscript"/>
+      </case>
+      <case value="typescript">
+        <antcall target="compile-typescript"/>
+      </case>
+      <case value="coffee">
+        <antcall target="compile-coffee"/>
+      </case>
+    </switch>
     <antcall target="compile-js"/>
-    <antcall target="compile-less"/>
+    <switch value="${csslang}">
+      <case value="less">
+        <antcall target="compile-less"/>
+      </case>
+      <case value="scss">
+        <antcall target="compile-scss"/>
+      </case>
+    </switch>
   </target>
 
   <target name="finz-build">
@@ -114,13 +123,10 @@
 
   <target name="pre-build">
     <mkdir dir="${basedir}/POD-INF/classes" />
-    <mkdir dir="${build.dir}" />
-    <mkdir dir="${build.dir}/coffee" />
-    <mkdir dir="${build.dir}/less" />
-    <mkdir dir="${build.dir}/ts" />
-    <mkdir dir="${build.dir}/js" />
+    <mkdir dir="${build.dir}"/>
+    <mkdir dir="${build.dir}/web_scripts"/>
+    <mkdir dir="${build.dir}/web_styles"/>
   </target>
-
 
   <!-- target: compile server-side source code ================================= -->
 
@@ -157,7 +163,7 @@
     <!-- copy over other resources -->
     <copy todir="${out.jar.dir}">
       <fileset dir="${src.dir}/clojure">
-        <exclude name="**/*.clojure"/>
+        <exclude name="**/*.clj"/>
       </fileset>
       <fileset dir="${src.dir}/scala">
         <exclude name="**/*.scala"/>
@@ -210,75 +216,94 @@
   </target>
 
   <target name="compile-cljscript">
-    <copy todir="${build.dir}/cljscript">
-      <fileset dir="${src.dir}/cljscript"><include name="*.cljs"/></fileset>
+    <copy todir="${build.dir}/web_scripts">
+      <fileset dir="${web.dir}/scripts"><include name="**/*.cljs"/></fileset>
     </copy>
     <java classname="clojure.main" fork="true" failonerror="true" 
       maxmemory="2048m" classpathref="compile.path.id">
       <arg value="${basedir}/conf/cljsc.clj"/>
-      <arg value="${src.dir}/clojurescript"/>
+      <arg value="${web.dir}/scripts"/>
       <arg value="true"/>
       <!-- advanced none whitespace simple -->
       <arg value="none"/>
-      <arg value="${build.dir}/cljs"/>
+      <arg value="${build.dir}/web_scripts"/>
     </java>
   </target>
 
   <target name="compile-typescript">
-    <copy todir="${build.dir}/ts">
-      <fileset dir="${src.dir}/typescript"><include name="*.ts"/></fileset>
+    <copy todir="${build.dir}/web_scripts">
+      <fileset dir="${web.dir}/scripts"><include name="**/*.ts"/></fileset>
     </copy>
-    <exec executable="tsc" dir="${build.dir}/ts">
-      <arg value="--outDir"/> <arg value="--output"/> <arg value="${build.dir}/ts"/>
-      <arg value="*.ts"/>
+    <exec executable="tsc" dir="${build.dir}/web_scripts">
+      <arg value="--outDir"/> <arg value="--output"/> <arg value="${build.dir}/web_scripts"/>
+      <arg value="**/*.ts"/>
     </exec>
   </target>
 
   <target name="compile-coffee">
-    <copy todir="${build.dir}/coffee">
-      <fileset dir="${src.dir}/coffee"><include name="*.coffee"/></fileset>
+    <copy todir="${build.dir}/web_scripts">
+      <fileset dir="${web.dir}/scripts"><include name="**/*.coffee"/></fileset>
     </copy>
     <exec executable="coffee">
-      <arg value="--bare"/> <arg value="--output"/> <arg value="${build.dir}/coffee"/>
-      <arg value="--compile"/> <arg value="${build.dir}/coffee"/>
+      <arg value="--bare"/> <arg value="--output"/> <arg value="${build.dir}/web_scripts"/>
+      <arg value="--compile"/> <arg value="${build.dir}/web_scripts"/>
     </exec>
   </target>
 
   <target name="compile-js">
     <copy todir="${basedir}/public/scripts">
-      <fileset dir="${build.dir}/coffee"><include name="*.js"/></fileset>
-      <fileset dir="${build.dir}/ts"><include name="*.js"/></fileset>
-      <fileset dir="${build.dir}/js"><include name="*.js"/></fileset>
-      <fileset dir="${src.dir}/js"><include name="*.js"/></fileset>
+      <fileset dir="${build.dir}/web_scripts"><include name="**/*.js"/></fileset>
+      <fileset dir="${web.dir}/scripts"><include name="**/*.js"/></fileset>
     </copy>
   </target>
 
   <target name="compile-less">
-    <copy todir="${build.dir}/less">
-      <fileset dir="${src.dir}/less"><include name="*.less"/></fileset>
+    <copy todir="${build.dir}/web_styles">
+      <fileset dir="${web.dir}/styles"><include name="**/*.less"/></fileset>
     </copy>
     <apply executable="lessc" parallel="false">
-      <fileset dir="${build.dir}/less">
-        <include name="*.less"/>
+      <fileset dir="${build.dir}/web_styles">
+        <include name="**/*.less"/>
       </fileset>
       <srcfile/>
       <chainedmapper>
         <mapper type="glob" from="*.less" to="*.css"/>
-        <globmapper from="*" to="${build.dir}/less/*"/>
+        <globmapper from="*" to="${build.dir}/web_styles/*"/>
       </chainedmapper>
       <targetfile/>
     </apply>
     <copy todir="${basedir}/public/styles">
-      <fileset dir="${build.dir}/less"><include name="*.css"/></fileset>
-      <fileset dir="${src.dir}/less"><include name="*.css"/></fileset>
+      <fileset dir="${build.dir}/web_styles"><include name="**/*.css"/></fileset>
+      <fileset dir="${web.dir}/styles"><include name="**/*.css"/></fileset>
+    </copy>
+  </target>
+
+  <target name="compile-scss">
+    <copy todir="${build.dir}/web_styles">
+      <fileset dir="${web.dir}/styles"><include name="**/*.scss"/></fileset>
+    </copy>
+    <apply executable="sass" parallel="false">
+      <fileset dir="${build.dir}/web_styles">
+        <include name="**/*.scss"/>
+      </fileset>
+      <srcfile/>
+      <chainedmapper>
+        <mapper type="glob" from="*.scss" to="*.css"/>
+        <globmapper from="*" to="${build.dir}/web_styles/*"/>
+      </chainedmapper>
+      <targetfile/>
+    </apply>
+    <copy todir="${basedir}/public/styles">
+      <fileset dir="${build.dir}/web_styles"><include name="**/*.css"/></fileset>
+      <fileset dir="${web.dir}/styles"><include name="**/*.css"/></fileset>
     </copy>
   </target>
 
   <target name="yui-css">
     <apply executable="java" parallel="false">
-      <fileset dir="${basedir}/styles">
-        <exclude name="*.min.css"/>
-        <include name="*.css"/>
+      <fileset dir="${basedir}/public/styles">
+        <exclude name="**/*.min.css"/>
+        <include name="**/*.css"/>
       </fileset>
       <arg line="-jar" />
       <arg path="${gallifrey.home}/lib/yuicompressor-2.4.7.jar" />
@@ -286,7 +311,7 @@
       <arg line="-o"/>
       <chainedmapper>
         <mapper type="glob" from="*.css" to="*.min.css"/>
-        <globmapper from="*" to="${basedir}/styles/*"/>
+        <globmapper from="*" to="${basedir}/public/styles/*"/>
       </chainedmapper>
       <targetfile/>
     </apply>
@@ -295,8 +320,8 @@
   <target name="yui-js">
     <apply executable="java" parallel="false">
       <fileset dir="${basedir}/public/scripts">
-        <exclude name="*.min.js"/>
-        <include name="*.js"/>
+        <exclude name="**/*.min.js"/>
+        <include name="**/*.js"/>
       </fileset>
       <arg line="-jar" />
       <arg path="${gallifrey.home}/lib/yuicompressor-2.4.7.jar" />

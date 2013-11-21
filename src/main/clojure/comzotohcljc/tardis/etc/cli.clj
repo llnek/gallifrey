@@ -36,6 +36,7 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(def ^:dynamic *GALLIFREY-WEBCSSLANG* "scss")
 (def ^:dynamic *GALLIFREY-WEBLANG* "coffee")
 
 (defn- copy-files "" [^File srcDir ^File destDir ext]
@@ -195,6 +196,7 @@
       (var-set fp (File. appDir "build.xs"))
       (FileUtils/writeStringToFile  ^File @fp
         (-> (FileUtils/readFileToString ^File @fp "utf-8")
+          (StringUtils/replace "@@WEBCSSLANG@@" *GALLIFREY-WEBCSSLANG*)
           (StringUtils/replace "@@WEBLANG@@" *GALLIFREY-WEBLANG*)
           (StringUtils/replace "@@APPTYPE@@" flavor)
           (StringUtils/replace "@@GALLIFREYHOME@@" (.getCanonicalPath hhhHome))) "utf-8")
@@ -211,15 +213,10 @@
                             :key-fn keyword)
          appDir (File. hhhHome (str "apps/" appId))
          wlib (doto (File. appDir "public/vendors") (.mkdirs))
+         csslg *GALLIFREY-WEBCSSLANG*
          wlg *GALLIFREY-WEBLANG*
          buf (StringBuilder.)
          appDomainPath (.replace appDomain "." "/") ]
-
-    (doseq [ s ["js" "less"]]
-      (-> (File. appDir (str "src/main/" s)) (.mkdirs)))
-
-    (doseq [ s ["controllers" "views" "models"]]
-      (-> (File. appDir (str "src/main/" wlg "/" s)) (.mkdirs)))
 
     (doseq [ s ["images" "scripts" "styles"]]
       (-> (File. appDir (str "public/" s)) (.mkdirs)))
@@ -231,7 +228,9 @@
     (FileUtils/copyFileToDirectory (File. hhhHome "etc/web/pipe.clj")
                                    (File. appDir (str "src/main/clojure/" appDomainPath)))
 
-    (-> (File. appDir (str "src/test/" wlg)) (.mkdirs))
+    (-> (File. appDir "src/web/scripts/") (.mkdirs))
+    (-> (File. appDir "src/web/styles") (.mkdirs))
+    (-> (File. appDir "src/test/js") (.mkdirs))
 
     (FileUtils/copyFile wfc (File. wlib ".list"))
     (doseq [ df (:libs wbs) ]
@@ -290,9 +289,6 @@
       (FileUtils/copyFileToDirectory (File. hhhHome "etc/netty/index.html")
                                      (File. appDir "public"))
 
-      (FileUtils/copyFileToDirectory (File. hhhHome "etc/netty/main.less")
-                                     (File. appDir "src/main/less"))
-
       (var-set fp (File. appDir "conf/routes.conf"))
       (FileUtils/writeStringToFile ^File @fp
         (-> (FileUtils/readFileToString ^File @fp "utf-8")
@@ -307,4 +303,3 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def ^:private cli-eof nil)
-
