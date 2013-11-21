@@ -5,6 +5,13 @@ lib/
 classes/
 checkouts/
 
+POD-INF/classes/
+POD-INF/lib/
+public/scripts/
+public/styles/
+public/images/
+public/pages/
+
 *.class
 *.asc
 *.jar
@@ -16,10 +23,10 @@ checkouts/
 .lein-plugins
 .lein-repl-history
 
-
-
 ._.DS_Store
 .DS_Store
 .svn
+.sass-cache
+
 
 
