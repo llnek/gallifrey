@@ -394,7 +394,7 @@
     </copy>
     <java classname="autodoc.autodoc" fork="true" failonerror="true">
       <classpath refid="compile.path.id"/>
-      <arg value="--name=Hohenheim"/>
+      <arg value="--name=Gallifrey"/>
       <arg value="--root=${basedir}"/>
       <arg value="--source-path=src/main/clojure"/>
       <arg value="--output-path=${pack.dir}/docs/api"/>

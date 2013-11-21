@@ -126,10 +126,10 @@
 
 (defn- start-exec [^comzotohcljc.util.core.MuObj ctx]
   (do
-    (info "about to start Hohenheim...")
+    (info "about to start Gallifrey...")
     (let [ ^Startable exec (.getf ctx K_EXECV) ]
       (.start exec))
-    (info "Hohenheim started.")
+    (info "Gallifrey started.")
     ctx))
 
 (defn- primodial [^comzotohcljc.util.core.MuObj ctx]
@@ -154,12 +154,12 @@
       (do
         (reset! STOPCLI true)
         (when-not (nil? pid) (FileUtils/deleteQuietly pid))
-        (info "about to stop Hohenheim...")
+        (info "about to stop Gallifrey...")
         (info "applications are shutting down...")
         (when-not (nil? execv)
           (.stop ^Startable execv))
-        (info "Hohenheim stopped.")
-        (info "Hohenheim says \"Goodbye\".")
+        (info "Gallifrey stopped.")
+        (info "Tardis says \"Goodbye\".")
         (deliver CLI-TRIGGER 911)))))
 
 (defn- enableRemoteShutdown [^comzotohcljc.util.core.MuObj ctx]
@@ -249,7 +249,7 @@
 (defn start-main "" [ & args ]
   (do
     (when (< (count args) 1)
-      (throw (CmdHelpError. "Hohenheim Home not defined.")))
+      (throw (CmdHelpError. "Gallifrey Home not defined.")))
     (info "set gallifrey-home= " (first args))
     (let [ ^Startable cm  (apply make-climain args) ]
       (.start cm))))

@@ -1,5 +1,5 @@
-Hohenheim-0.0.3-SNAPSHOT : [ 2013/05 ]
+Gallifrey-0.0.1-SNAPSHOT : [ 2013/05 ]
 =====================================
 
--  bug fixes release
+-  Initial release.
 

@@ -108,9 +108,9 @@ NETTY=-Dio.netty.eventLoopThreads=16
 show_proc() {
     pid=$( ps -ef | grep comzotohcljc.tardis.etc.core | grep -v grep | awk '{print $2}' )
     if [ -n "$pid" ]; then
-      echo "Hohenheim is running with process-id: ${pid}."
+      echo "Gallifrey is running with process-id: ${pid}."
     else
-      echo "Hohenheim is not running."
+      echo "Gallifrey is not running."
     fi
 }
 stop_proc() {

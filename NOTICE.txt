@@ -1,5 +1,5 @@
 ------------------------------------------------------------------------------
-Hohenheim - Server Side JVM Application Framework.
+Gallifrey - Server Side JVM Application Framework.
 Copyright 2012 Cherimoia,LLC. All Rights Reserved.
 ------------------------------------------------------------------------------
 The following set of software modules/components are included

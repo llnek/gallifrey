@@ -64,7 +64,7 @@
 
 (defn- usage []
  (println (make-string \= 78))
-  (println "> gallifrey <commands & options>")
+  (println "> tardis <commands & options>")
   (println "> -----------------")
   (drawHelpLines "> %-35s %s\n" CMDLINE-INFO)
   (println ">")
@@ -79,13 +79,13 @@
 ;;mkCZldrs(home)
 (defn- parseArgs [rcb & args]
   (let [ h (File. ^String (first args)) ]
-    (test-cond (str "Cannot access Hohenheim home " h) (dir-read? h))
+    (test-cond (str "Cannot access Gallifrey home " h) (dir-read? h))
       (if (not (contains? (get-commands) (keyword (nth args 1))))
         false
         (fn [] (apply eval-command h rcb (drop 1 args))))))
 
 (defn -main "Main Entry" [& args]
-  ;;(debug "Hohenheim: Main Entry")
+  ;;(debug "Gallifrey: Main Entry")
   ;; for security, don't just eval stuff
   ;;(alter-var-root #'*read-eval* (constantly false))
   (let [ rcpath (str "comzotohcljc/tardis/etc/Resources")

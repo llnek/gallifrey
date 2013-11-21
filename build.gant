@@ -237,7 +237,7 @@ target (packDocs: '') {
     fork: true, 
     failonerror: true) {
     classpath (refid: 'compilePathId')
-    arg (value: '--name=Hohenheim')
+    arg (value: '--name=Gallifrey')
     arg (value: "--root=${basedir}")
     arg (value: '--source-path=src/main/clojure')
     arg (value: "--output-path=${packDir}/docs/api")

@@ -53,7 +53,7 @@ class Demo extends PipelineDelegate {
 
   private def fmtHtml() = """
       <html><head>
-      <title>Hohenheim: Test Web</title>
+      <title>Gallifrey: Test Web</title>
       <link rel="shortcut icon" href="/public/images/favicon.ico"/>
       <link type="text/css" rel="stylesheet" href="/public/styles/main.css"/>
       <script type="text/javascript" src="/public/scripts/test.js"></script>
