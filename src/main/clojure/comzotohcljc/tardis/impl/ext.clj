@@ -262,7 +262,7 @@
             (info "container starting all services...")
             (doto ftlCfg
               (.setDirectoryForTemplateLoading
-                (File. (.getAppDir this) (str DN_PAGES "/" DN_VIEWS)))
+                (File. (.getAppDir this) (str DN_PUBLIC "/" DN_PAGES)))
               (.setObjectWrapper (DefaultObjectWrapper.)))
             (doseq [ [k v] (seq* srg) ]
               (info "service: " k " about to start...")
