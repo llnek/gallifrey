@@ -52,7 +52,7 @@ object Constants {
   val DN_VIEWS = "views"
   val DN_PAGES = "pages"
   val DN_PATCH="patch"
-  val DN_IMAGES="images"
+  val DN_MEDIA="media"
   val DN_SCRIPTS="scripts"
   val DN_STYLES="styles"
   val DN_PUBLIC="public"

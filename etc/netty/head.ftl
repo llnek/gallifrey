@@ -5,7 +5,7 @@
 <meta name="description" content="${meta.desc!""}"/>
 <#if meta.author??><meta name="author" content="${meta.author}"/></#if>
 
-<link rel="shortcut icon" type="image/png" href="/public/images/favicon.png"/>
+<link rel="shortcut icon" type="image/png" href="/public/media/favicon.png"/>
 
 <link rel="stylesheet" href="/public/bootstrap/css/bootstrap.min.css"/>
 <link rel="stylesheet" href="/public/bootstrap/css/bootstrap-responsive.min.css"/>

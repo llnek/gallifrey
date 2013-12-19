@@ -218,16 +218,16 @@
          buf (StringBuilder.)
          appDomainPath (.replace appDomain "." "/") ]
 
-    (doseq [ s ["pages" "images" "scripts" "styles"]]
+    (doseq [ s ["pages" "media" "scripts" "styles"]]
       (-> (File. appDir (str "src/webapps/main/" s)) (.mkdirs)))
 
-    (doseq [ s ["pages" "images" "scripts" "styles"]]
+    (doseq [ s ["pages" "media" "scripts" "styles"]]
       (-> (File. appDir (str "public/" s)) (.mkdirs)))
 
     (FileUtils/copyFileToDirectory (File. hhhHome "etc/web/cljsc.clj")
                                    (File. appDir "conf"))
     (FileUtils/copyFileToDirectory (File. hhhHome "etc/web/favicon.png")
-                                   (File. appDir "src/webapps/main/images"))
+                                   (File. appDir "src/webapps/main/media"))
     (FileUtils/copyFileToDirectory (File. hhhHome "etc/web/pipe.clj")
                                    (File. appDir (str "src/main/clojure/" appDomainPath)))
 

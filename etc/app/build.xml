@@ -85,7 +85,7 @@
         <antcall target="compile-scss"/>
       </case>
     </switch>
-    <antcall target="compile-images"/>
+    <antcall target="compile-media"/>
     <antcall target="compile-pages"/>
   </target>
 
@@ -327,10 +327,10 @@
     </copy>
   </target>
 
-  <target name="compile-images">
-    <mkdir dir="${basedir}/public/images/${wappid}"/>
-    <copy todir="${basedir}/public/images/${wappid}">
-      <fileset dir="${web.dir}/${wappid}/images"><include name="**/*"/></fileset>
+  <target name="compile-media">
+    <mkdir dir="${basedir}/public/media/${wappid}"/>
+    <copy todir="${basedir}/public/media/${wappid}">
+      <fileset dir="${web.dir}/${wappid}/media"><include name="**/*"/></fileset>
     </copy>
   </target>
 
