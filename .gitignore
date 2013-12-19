@@ -1,7 +1,7 @@
 build.output.folder/
 targets/
 target/
-lib/
+#lib/
 classes/
 checkouts/
 
