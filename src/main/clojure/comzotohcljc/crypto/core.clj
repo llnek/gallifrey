@@ -96,7 +96,7 @@
 (import '(org.bouncycastle.cms CMSProcessableByteArray
   CMSSignedDataGenerator CMSSignedGenerator))
 (import '(org.bouncycastle.cms.jcajce JcaSignerInfoGeneratorBuilder))
-(import '(org.bouncycastle.openssl PEMParser PEMReader))
+(import '(org.bouncycastle.openssl PEMParser))
 (import '(org.bouncycastle.operator
   DigestCalculatorProvider ContentSigner))
 (import '(org.bouncycastle.operator.jcajce
