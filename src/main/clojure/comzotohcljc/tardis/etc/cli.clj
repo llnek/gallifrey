@@ -219,7 +219,7 @@
          appDomainPath (.replace appDomain "." "/") ]
 
     (doseq [ s ["pages" "media" "scripts" "styles"]]
-      (-> (File. appDir (str "src/webapps/main/" s)) (.mkdirs)))
+      (-> (File. appDir (str "src/web/main/" s)) (.mkdirs)))
 
     (doseq [ s ["pages" "media" "scripts" "styles"]]
       (-> (File. appDir (str "public/" s)) (.mkdirs)))
@@ -227,7 +227,7 @@
     (FileUtils/copyFileToDirectory (File. hhhHome "etc/web/cljsc.clj")
                                    (File. appDir "conf"))
     (FileUtils/copyFileToDirectory (File. hhhHome "etc/web/favicon.png")
-                                   (File. appDir "src/webapps/main/media"))
+                                   (File. appDir "src/web/main/media"))
     (FileUtils/copyFileToDirectory (File. hhhHome "etc/web/pipe.clj")
                                    (File. appDir (str "src/main/clojure/" appDomainPath)))
 
@@ -287,7 +287,7 @@
       (copy-files (File. hhhHome "etc/netty") (File. appDir "pages/htmls") "ftl")
 
       (FileUtils/copyFileToDirectory (File. hhhHome "etc/netty/index.html")
-                                     (File. appDir "src/webapps/main/pages"))
+                                     (File. appDir "src/web/main/pages"))
 
       (var-set fp (File. appDir "conf/routes.conf"))
       (FileUtils/writeStringToFile ^File @fp
