@@ -118,6 +118,7 @@ target (justJar: '') {
      ================================= */
 
 target (cleanPackDir: '') {
+  mkdir (dir: "${packDir}")
   delete ( includeEmptyDirs: true) {
     fileset (followsymlinks: false, dir: "${packDir}", includes: '**/*')
   }
