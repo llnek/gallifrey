@@ -21,7 +21,6 @@ ig.module('game.dummy').requires(
 //'impact.debug.graph-panel',
 //'impact.debug.maps-panel',
 //'impact.debug.menu'
-
 ).defines(function() {
-  console.log('heeloo');
+  if (console && console.log) { console.log('[impactjs] heeloo'); }
 });

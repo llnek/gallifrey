@@ -317,6 +317,9 @@ window.ig = {
 				ig._loadQueue.splice(i, 1);
 				m.loaded = true;
 				m.body();
+        if (console && console.log) {
+          console.log("[impactjs] loaded & defined module: " + m.name);
+        }
 				modulesLoaded = true;
 				i--;
 			}
