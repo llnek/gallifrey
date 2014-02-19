@@ -14,7 +14,7 @@ Demo
 
 You can try out the [online demo][1] to see l10n.js in action.
 
-Currently the demo only supports the following locales.
+Currently the demo supports the following locales.
 
 * [English](http://purl.eligrey.com/l10n.js/demo/en)
     * [American English](http://purl.eligrey.com/l10n.js/demo/en-US)
@@ -39,6 +39,7 @@ Currently the demo only supports the following locales.
 * [Swedish](http://purl.eligrey.com/l10n.js/demo/se)
 * [Turkish](http://purl.eligrey.com/l10n.js/demo/tr)
 * [Hungarian](http://purl.eligrey.com/l10n.js/demo/hu)
+* [Czech](http://purl.eligrey.com/l10n.js/demo/cs)
 
 If you know a language that isn't currently supported in the demo, I encourage you to
 contribute a localization by sending me your own localizations, either [through GitHub][2]
